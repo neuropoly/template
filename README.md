@@ -6,9 +6,13 @@ Framework for creating unbiased MRI templates of the spinal cord.
 
 SCT is used for all preprocessing steps, including extraction of centerline, generation of average centerline in the template space, and straightening/registration of all spinal cord images on the initial template space.
 
-- ANIMAL registration framework
+- [ANIMAL registration framework, part of the IPL longitudinal pipeline](https://github.com/vfonov/nist_mni_pipelines)
 
 ANIMAL is used for generating the template, using iterative nonlinear deformation.
+
+- [Minc Toolkit v2](http://bic-mni.github.io/)
+
+The Minc Toolkit is a dependency of the template generation process.
 
 ## Get started
 The script "preprocessing.py" contains several functions to preprocess spinal cord MRI data. Preprocessing includes:
