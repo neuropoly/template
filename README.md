@@ -9,6 +9,7 @@ SCT is used for all preprocessing steps, including extraction of centerline, gen
 - [ANIMAL registration framework, part of the IPL longitudinal pipeline](https://github.com/vfonov/nist_mni_pipelines)
 
 ANIMAL is used for generating the template, using iterative nonlinear deformation.
+The recommanded pipeline for generating a template of the spinal cord is the [nonlinear symmetrical template model](https://github.com/vfonov/nist_mni_pipelines/blob/master/examples/synthetic_tests/test_model_creation/scoop_test_nl_sym.py).
 
 - [Minc Toolkit v2](http://bic-mni.github.io/)
 
