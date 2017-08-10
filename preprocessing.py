@@ -30,20 +30,27 @@ list_labels = [50, 49, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
                27, 28, 29, 30]
 
 
-def download_example_data(path_data='./', force=False):
+def download_data_template(path_data='./', name='example', force=False):
     """
     This function downloads the example data and return the path where it was downloaded.
     :param path_data: destination path where to download the data
     :return: absolute destination path
     """
 
-    data_name = 'data'
+    # Download data
+    if name == 'example':
+        data_name = 'data'
+        url = 'https://osf.io/umvyk/?action=download'
+    elif name == 'icbm152':
+        data_name = 'icbm152'
+        url = 'https://osf.io/ps68c/?action=download'
+    else:
+        raise ValueError('ERROR: data name is wrong. It should be either \'example\' or \'icbm152\'')
+
     if os.path.isdir(path_data + data_name) and not force:
         print os.path.abspath(path_data + data_name) + '/'
         return os.path.abspath(path_data + data_name) + '/'
 
-    # Download data
-    url = 'https://osf.io/h73cm/?action=download'
     verbose = 2
     try:
         tmp_file = download_data(url, verbose)
@@ -62,7 +69,10 @@ def download_example_data(path_data='./', force=False):
     sct.printv('\nRemove temporary file...')
     os.remove(tmp_file)
 
-    return os.path.abspath(path_data + data_name) + '/'
+    absolute_path = os.path.abspath(path_data + data_name) + '/'
+    os.chmod(absolute_path, 0755)
+
+    return absolute_path
 
 
 def read_dataset(fname_json='configuration.json', path_data='./'):
@@ -107,7 +117,7 @@ def read_dataset(fname_json='configuration.json', path_data='./'):
     if 'path_template' in dataset_info:
         if not os.path.isdir(path_data + dataset_info['path_template']):
             os.makedirs(path_data + dataset_info['path_template'])
-        else:
+            os.chmod(path_data + dataset_info['path_template'], 0755)
             dataset_info['path_template'] = os.path.abspath(path_data + dataset_info['path_template']) + '/'
 
     # if there are some errors, raise an exception
@@ -136,6 +146,8 @@ def generate_centerline(dataset_info, contrast='t1', regenerate=False):
     path_data = dataset_info['path_data']
     list_subjects = dataset_info['subjects']
     list_centerline = []
+
+    current_path = os.getcwd()
 
     timer_centerline = sct.Timer(len(list_subjects))
     timer_centerline.start()
@@ -176,6 +188,8 @@ def generate_centerline(dataset_info, contrast='t1', regenerate=False):
         timer_centerline.add_iteration()
     timer_centerline.stop()
 
+    os.chdir(current_path)
+
     return list_centerline
 
 
@@ -186,6 +200,9 @@ def compute_ICBM152_centerline(dataset_info):
     :return:
     """
     path_data = dataset_info['path_data']
+
+    if not os.path.isdir(path_data + 'icbm152/'):
+        download_data_template(path_data=path_data, name='icbm152', force=False)
 
     image_disks = Image(path_data + 'icbm152/mni_icbm152_t1_tal_nlin_sym_09c_disks_manual.nii.gz')
     coord = image_disks.getNonZeroCoordinates(sorting='z', reverse_coord=True)
@@ -254,8 +271,11 @@ def average_centerline(list_centerline, dataset_info):
         average_length[disk_label] = [disk_label, mean, std]
 
     # computing distances of disks from C1, based on average length
-    distances_disks_from_C1 = {'C1': 0.0, 'PMG': -average_length['PMG'][1],
-                               'PMJ': -average_length['PMG'][1] - average_length['PMJ'][1]}
+    distances_disks_from_C1 = {'C1': 0.0}
+    if 'PMG' in average_length:
+        distances_disks_from_C1['PMG'] = -average_length['PMG'][1]
+        if 'PMJ' in average_length:
+            distances_disks_from_C1['PMJ'] = -average_length['PMG'][1] - average_length['PMJ'][1]
     for disk_number in list_labels:
         if disk_number not in [50, 49, 1] and regions_labels[str(disk_number)] in average_length:
             distances_disks_from_C1[regions_labels[str(disk_number)]] = distances_disks_from_C1[regions_labels[str(disk_number - 1)]] + average_length[regions_labels[str(disk_number)]][1]
@@ -303,34 +323,43 @@ def average_centerline(list_centerline, dataset_info):
                 disk_position_in_centerline[disk_label] = i * number_of_points_between_levels
 
     # create final template space
-    coord_C1 = np.copy(centerline_icbm152.points[centerline_icbm152.index_disk['PMG']])
-    coord_C1[2] -= length_vertebral_levels['PMG'][1]
+    if 'PMG' in length_vertebral_levels:
+        coord_ref = np.copy(centerline_icbm152.points[centerline_icbm152.index_disk['PMG']])
+        coord_ref[2] -= length_vertebral_levels['PMG'][1]
+        label_ref = 'PMG'
+    elif 'C1' in length_vertebral_levels:
+        coord_ref = np.copy(centerline_icbm152.points[centerline_icbm152.index_disk['C1']])
+        coord_ref[2] -= length_vertebral_levels['C1'][1]
+        label_ref = 'C1'
+    else:
+        raise Exception('ERROR: the images should always have C1 label.')
+
     position_template_disks = {}
     for disk in average_length:
         if disk in ['PMJ', 'PMG']:
             position_template_disks[disk] = centerline_icbm152.points[centerline_icbm152.index_disk[disk]]
         elif disk == 'C1':
-            position_template_disks[disk] = coord_C1.copy()
+            position_template_disks[disk] = coord_ref.copy()
         else:
-            coord_disk = coord_C1.copy()
+            coord_disk = coord_ref.copy()
             coord_disk[2] -= average_positions_from_C1[disk]
             position_template_disks[disk] = coord_disk
 
     # change centerline to be straight below C1
-    index_PMG = disk_position_in_centerline['PMG']
+    index_ref = disk_position_in_centerline[label_ref]
     points_average_centerline_template = []
     for i in range(0, len(points_average_centerline)):
         current_label = label_points[i]
         if current_label in average_length:
             length_current_label = average_length[current_label][1]
             relative_position_from_disk = float(i - disk_position_in_centerline[current_label]) / float(number_of_points_between_levels)
-            temp_point = np.copy(coord_C1)
-            if i >= index_PMG:
-                temp_point[2] = coord_C1[2] - average_positions_from_C1[current_label] - relative_position_from_disk * length_current_label
+            temp_point = np.copy(coord_ref)
+            if i >= index_ref:
+                temp_point[2] = coord_ref[2] - average_positions_from_C1[current_label] - relative_position_from_disk * length_current_label
             points_average_centerline_template.append(temp_point)
 
     # append ICBM152 centerline from PMG
-    points_icbm152 = centerline_icbm152.points[centerline_icbm152.index_disk['PMG']:]
+    points_icbm152 = centerline_icbm152.points[centerline_icbm152.index_disk[label_ref]:]
     points_icbm152 = points_icbm152[::-1]
     points_average_centerline = np.concatenate([points_icbm152, points_average_centerline_template])
 
@@ -436,7 +465,7 @@ def straighten_all_subjects(dataset_info, contrast='t1'):
 ########################################################################################################################
 
 # downloading data and configuration file from OSF
-path_data = download_example_data(path_data='./')
+path_data = download_data_template(path_data='./')
 
 # extracting info from dataset
 dataset_info = read_dataset(path_data + 'configuration.json', path_data=path_data)
