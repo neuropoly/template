@@ -118,7 +118,7 @@ def read_dataset(fname_json='configuration.json', path_data='./'):
         if not os.path.isdir(path_data + dataset_info['path_template']):
             os.makedirs(path_data + dataset_info['path_template'])
             os.chmod(path_data + dataset_info['path_template'], 0755)
-            dataset_info['path_template'] = os.path.abspath(path_data + dataset_info['path_template']) + '/'
+        dataset_info['path_template'] = os.path.abspath(path_data + dataset_info['path_template']) + '/'
 
     # if there are some errors, raise an exception
     if error != '':
