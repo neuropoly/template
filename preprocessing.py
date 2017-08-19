@@ -29,6 +29,15 @@ regions_labels = {'50': 'PMJ', '49': 'PMG',
 list_labels = [50, 49, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
                27, 28, 29, 30]
 
+average_vert_length = {'PMJ': 30.0, 'PMG': 15.0, 'C1': 0.0,
+                       'C2': 20.176514191661337, 'C3': 17.022090519403065, 'C4': 17.842111671016056,
+                       'C5': 16.800356992319429, 'C6': 16.019212889311383, 'C7': 15.715854192723905,
+                       'T1': 16.84466163681078, 'T2': 19.865049296865475, 'T3': 21.550165130933905,
+                       'T4': 21.761237991438083, 'T5': 22.633281372803687, 'T6': 23.801974227738132,
+                       'T7': 24.358357813758332, 'T8': 25.200266294477885, 'T9': 25.315272064638506,
+                       'T10': 25.501856729317133, 'T11': 27.619238824308123, 'T12': 29.465119270009946,
+                        'L1': 31.89272719870084, 'L2': 33.511890474486449, 'L3': 35.721413718617441}
+
 
 def download_data_template(path_data='./', name='example', force=False):
     """
@@ -247,16 +256,20 @@ def average_centerline(list_centerline, dataset_info):
     length_vertebral_levels = {}
     for dist_disks in list_dist_disks:
         for disk_label in dist_disks:
-            if disk_label == 'C1':
-                length = 0.0
-            elif disk_label == 'PMJ':
+            if disk_label == 'PMJ':
                 length = abs(dist_disks[disk_label] - dist_disks['PMG'])
             elif disk_label == 'PMG':
                 length = abs(dist_disks[disk_label] - dist_disks['C1'])
             else:
                 index_current_label = list_labels.index(labels_regions[disk_label])
-                previous_label = regions_labels[str(list_labels[index_current_label - 1])]
-                length = dist_disks[disk_label] - dist_disks[previous_label]
+                next_label = regions_labels[str(list_labels[index_current_label + 1])]
+                if next_label in dist_disks:
+                    length = abs(dist_disks[disk_label] - dist_disks[next_label])
+                else:
+                    if disk_label in average_vert_length:
+                        length = average_vert_length[disk_label]
+                    else:
+                        length = 0.0
 
             if disk_label in length_vertebral_levels:
                 length_vertebral_levels[disk_label].append(length)
@@ -306,12 +319,7 @@ def average_centerline(list_centerline, dataset_info):
                 relative_position = 1.0 - relative_position
             list_coordinates = [[]] * len(list_centerline)
             for k, centerline in enumerate(list_centerline):
-                idx_closest = centerline.get_closest_to_absolute_position(disk_label, relative_position)
-                if idx_closest is not None:
-                    coordinate_closest = centerline.get_point_from_index(idx_closest)
-                    list_coordinates[k] = coordinate_closest.tolist()
-                else:
-                    list_coordinates[k] = [np.nan, np.nan, np.nan]
+                list_coordinates[k] = centerline.get_coordinate_interpolated(disk_label, relative_position)
 
             # average all coordinates
             average_coord = np.nanmean(list_coordinates, axis=0)
@@ -324,22 +332,18 @@ def average_centerline(list_centerline, dataset_info):
 
     # create final template space
     if 'PMG' in length_vertebral_levels:
-        coord_ref = np.copy(centerline_icbm152.points[centerline_icbm152.index_disk['PMG']])
-        coord_ref[2] -= length_vertebral_levels['PMG'][1]
         label_ref = 'PMG'
     elif 'C1' in length_vertebral_levels:
-        coord_ref = np.copy(centerline_icbm152.points[centerline_icbm152.index_disk['C1']])
-        coord_ref[2] -= length_vertebral_levels['C1'][1]
         label_ref = 'C1'
     else:
         raise Exception('ERROR: the images should always have C1 label.')
+    
+    coord_ref = np.copy(centerline_icbm152.points[centerline_icbm152.index_disk[label_ref]])
 
     position_template_disks = {}
     for disk in average_length:
         if disk in ['PMJ', 'PMG']:
             position_template_disks[disk] = centerline_icbm152.points[centerline_icbm152.index_disk[disk]]
-        elif disk == 'C1':
-            position_template_disks[disk] = coord_ref.copy()
         else:
             coord_disk = coord_ref.copy()
             coord_disk[2] -= average_positions_from_C1[disk]
@@ -355,7 +359,12 @@ def average_centerline(list_centerline, dataset_info):
             relative_position_from_disk = float(i - disk_position_in_centerline[current_label]) / float(number_of_points_between_levels)
             temp_point = np.copy(coord_ref)
             if i >= index_ref:
-                temp_point[2] = coord_ref[2] - average_positions_from_C1[current_label] - relative_position_from_disk * length_current_label
+                index_current_label = list_labels.index(labels_regions[current_label])
+                next_label = regions_labels[str(list_labels[index_current_label + 1])]
+                if next_label not in average_positions_from_C1:
+                    temp_point[2] = coord_ref[2] - average_positions_from_C1[current_label] - relative_position_from_disk * length_current_label
+                else:
+                    temp_point[2] = coord_ref[2] - average_positions_from_C1[current_label] - abs(relative_position_from_disk * (average_positions_from_C1[current_label] - average_positions_from_C1[next_label]))
             points_average_centerline_template.append(temp_point)
 
     # append ICBM152 centerline from PMG
