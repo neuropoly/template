@@ -12,7 +12,9 @@ ANIMAL is used for generating the template, using iterative nonlinear deformatio
 The recommanded pipeline for generating a template of the spinal cord is the [nonlinear symmetrical template model](https://github.com/vfonov/nist_mni_pipelines/blob/master/examples/synthetic_tests/test_model_creation/scoop_test_nl_sym.py).
 
 Installation:
-git clone https://github.com/vfonov/nist_mni_pipelines.git
+
+`git clone https://github.com/vfonov/nist_mni_pipelines.git`
+
 Add the following lines to you `~/.bashrc`: 
 ```
 export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines"
