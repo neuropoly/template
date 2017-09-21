@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import numpy as np
+import csv
 
 import sct_utils as sct
 from msct_types import Centerline
@@ -471,6 +472,45 @@ def straighten_all_subjects(dataset_info, contrast='t1'):
     timer_straightening.stop()
 
 
+def create_mask_template(dataset_info, contrast='t1'):
+    path_template = dataset_info['path_template']
+    subject_name = dataset_info['subjects'][0]
+
+    template_mask = Image(path_template + subject_name + '_' + contrast + '.nii.gz')
+    template_mask.data *= 0.0
+    template_mask.data += 1.0
+    template_mask.setFileName(path_template + 'template_mask.nii.gz')
+    template_mask.save()
+
+    sct.run('nii2mnc ' + path_template + 'template_mask.nii.gz ' + ' ' + path_template + 'template_mask.mnc')
+
+    return path_template + 'template_mask.mnc'
+
+
+def convert_data2mnc(dataset_info, contrast='t1'):
+    path_template = dataset_info['path_template']
+    list_subjects = dataset_info['subjects']
+
+    path_template_mask = create_mask_template(dataset_info, contrast)
+
+    output_list = open('subjects.csv', "wb")
+    writer = csv.writer(output_list, delimiter='', quotechar='"', quoting=csv.QUOTE_ALL)
+
+    timer_convert = sct.Timer(len(list_subjects))
+    timer_convert.start()
+    for subject_name in list_subjects:
+        fname_nii = path_template + subject_name + '_' + contrast + '.nii.gz'
+        fname_mnc = path_template + subject_name + '_' + contrast + '.mnc'
+        sct.run('nii2mnc ' + fname_nii + ' ' + fname_mnc)
+
+        writer.writerow(fname_mnc + ',' + path_template_mask)
+
+        timer_convert.add_iteration()
+    timer_convert.stop()
+
+    output_list.close()
+
+
 ########################################################################################################################
 
 # downloading data and configuration file from OSF
@@ -492,4 +532,7 @@ generate_initial_template_space(points_average_centerline=points_average_centerl
 
 # straightening of all spinal cord
 straighten_all_subjects(dataset_info=dataset_info, contrast='t1')
+
+# converting results to Minc format
+convert_data2mnc(dataset_info, contrast='t1')
 
