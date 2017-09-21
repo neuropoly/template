@@ -11,9 +11,49 @@ SCT is used for all preprocessing steps, including extraction of centerline, gen
 ANIMAL is used for generating the template, using iterative nonlinear deformation.
 The recommanded pipeline for generating a template of the spinal cord is the [nonlinear symmetrical template model](https://github.com/vfonov/nist_mni_pipelines/blob/master/examples/synthetic_tests/test_model_creation/scoop_test_nl_sym.py).
 
+Installation:
+git clone https://github.com/vfonov/nist_mni_pipelines.git
+Add the following lines to you `~/.bashrc`: 
+```
+export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines"
+export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines/ipl/"
+export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines/ipl"
+```
+
+You will also need to install `scoop` with: `pip install scoop`
+
+For some reason, the latest version of scoop is not completely compatible with IPL scripts. You may have to change lines 180-195 of the script `nist_mni_pipelines/ipl/model/generate_nonlinear.py` by the followings:
+```
+else:
+    transforms.append(
+        futures.submit(
+            non_linear_register_step,
+            s,
+            current_model,
+            sample_xfm,
+            sample_inv_xfm,
+            prev_transform,
+            p['level'],
+            start,
+            symmetric,
+            parameters,
+            prefix,
+            downsample)
+        )
+```
+
 - [Minc Toolkit v2](http://bic-mni.github.io/)
 
 The Minc Toolkit is a dependency of the template generation process.
+
+TODO: fix the MINC Toolkit on OSX as the following error happens:
+```
+$ minccalc
+dyld: Library not loaded: /opt/local/lib/libfl.2.dylib
+  Referenced from: /opt/minc/1.9.15/bin/minccalc
+  Reason: image not found
+Trace/BPT trap: 5
+```
 
 ## Get started
 The script "preprocessing.py" contains several functions to preprocess spinal cord MRI data. Preprocessing includes:
@@ -23,6 +63,9 @@ The script "preprocessing.py" contains several functions to preprocess spinal co
 4) straightening of all subjects on the initial template space
 
 A small dataset, containing 5 T1w and T2w images, is available [here](https://osf.io/h73cm/) and is used as example for preprocessing. The dataset is downloaded automatically by the preprocessing script.
+
+One the pre-processing is performed, you can generate the template using the IPL pipeline. Three main steps are required:
+1. 
 
 ## How to generate your own template?
 The template generation framework can be configured by the file "configuration.json", that includes the following variables:
