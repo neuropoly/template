@@ -64,20 +64,26 @@ On OSX, you may need to recompile Minc Toolkit from source to make sure all libr
 Install this python library in SCT python.
 
 ## Get started
-The script "preprocessing.py" contains several functions to preprocess spinal cord MRI data. Preprocessing includes:
+The script "pipeline.py" contains several functions to preprocess spinal cord MRI data. Preprocessing includes:
 1) extracting the spinal cord centerline and compute the vertebral distribution along the spinal cord, for all subjects.
 2) computing the average centerline, by averaging the position of each intervertebral disks. The average centerline of the spinal cord is straightened and merged with the ICBM152 template.
 3) generating the initial template space, based on the average centerline and positions of intervertebral disks.
 4) straightening of all subjects on the initial template space
 
-A small dataset, containing 5 T1w and T2w images, is available [here](https://osf.io/h73cm/) and is used as example for preprocessing. The dataset is downloaded automatically by the preprocessing script.
-
-One the pre-processing is performed, you can generate the template using the IPL pipeline with the following command, where N has to be replace by the number of subjects:
+A small dataset, containing 5 T1w and T2w images, is available [here](https://osf.io/h73cm/) and is used as example for preprocessing. The dataset is downloaded automatically by the preprocessing script. To use your own dataset and images, follow the section [How to generate your own template?](#how-to-generate-your-own-template). The data preprocessing is performed by running the script `pipeline.py`, after making sure to use SCT python:
 
 ```
-python -m scoop -n N -vvv generate_model_nl.py
+source sct_launcher
+python pipeline.py
 ```
 
+One the preprocessing is performed, please check your data. The preprocessing results should be a series of straight images registered in the same space, with all the vertebral levels aligned with each others.
+
+Now, you can generate the template using the IPL pipeline with the following command, where N has to be replace by the number of subjects:
+
+```
+python -m scoop -n N -vvv generate_template.py
+```
 
 ## How to generate your own template?
 The template generation framework can be configured by the file "configuration.json", that includes the following variables:
