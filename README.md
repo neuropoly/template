@@ -48,14 +48,7 @@ else:
 
 The Minc Toolkit is a dependency of the template generation process.
 
-TODO: fix the MINC Toolkit on OSX as the following error happens:
-```
-$ minccalc
-dyld: Library not loaded: /opt/local/lib/libfl.2.dylib
-  Referenced from: /opt/minc/1.9.15/bin/minccalc
-  Reason: image not found
-Trace/BPT trap: 5
-```
+On OSX, you may need to recompile Minc Toolkit from source to make sure all libraires are linked correctly.
 
 ## Get started
 The script "preprocessing.py" contains several functions to preprocess spinal cord MRI data. Preprocessing includes:
