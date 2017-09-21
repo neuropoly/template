@@ -15,7 +15,7 @@ Installation:
 
 `git clone https://github.com/vfonov/nist_mni_pipelines.git`
 
-Add the following lines to you `~/.bashrc`: 
+Add the following lines to you `~/.bashrc` (change the path): 
 ```
 export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines"
 export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines/ipl/"
