@@ -20,6 +20,7 @@ labels_regions = {'PMJ': 50, 'PMG': 49,
                   'L1': 20, 'L2': 21, 'L3': 22, 'L4': 23, 'L5': 24,
                   'S1': 25, 'S2': 26, 'S3': 27, 'S4': 28, 'S5': 29,
                   'Co': 30}
+
 regions_labels = {'50': 'PMJ', '49': 'PMG',
                   '1': 'C1', '2': 'C2', '3': 'C3', '4': 'C4', '5': 'C5', '6': 'C6', '7': 'C7',
                   '8': 'T1', '9': 'T2', '10': 'T3', '11': 'T4', '12': 'T5', '13': 'T6', '14': 'T7', '15': 'T8',
@@ -27,6 +28,7 @@ regions_labels = {'50': 'PMJ', '49': 'PMG',
                   '20': 'L1', '21': 'L2', '22': 'L3', '23': 'L4', '24': 'L5',
                   '25': 'S1', '26': 'S2', '27': 'S3', '28': 'S4', '29': 'S5',
                   '30': 'Co'}
+
 list_labels = [50, 49, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
                27, 28, 29, 30]
 
@@ -37,7 +39,7 @@ average_vert_length = {'PMJ': 30.0, 'PMG': 15.0, 'C1': 0.0,
                        'T4': 21.761237991438083, 'T5': 22.633281372803687, 'T6': 23.801974227738132,
                        'T7': 24.358357813758332, 'T8': 25.200266294477885, 'T9': 25.315272064638506,
                        'T10': 25.501856729317133, 'T11': 27.619238824308123, 'T12': 29.465119270009946,
-                        'L1': 31.89272719870084, 'L2': 33.511890474486449, 'L3': 35.721413718617441}
+                       'L1': 31.89272719870084, 'L2': 33.511890474486449, 'L3': 35.721413718617441}
 
 
 def download_data_template(path_data='./', name='example', force=False):
@@ -509,30 +511,3 @@ def convert_data2mnc(dataset_info, contrast='t1'):
     timer_convert.stop()
 
     output_list.close()
-
-
-########################################################################################################################
-
-# downloading data and configuration file from OSF
-path_data = download_data_template(path_data='./')
-
-# extracting info from dataset
-dataset_info = read_dataset(path_data + 'configuration.json', path_data=path_data)
-
-# generating centerlines
-list_centerline = generate_centerline(dataset_info=dataset_info, contrast='t1')
-
-# computing average template centerline and vertebral distribution
-points_average_centerline, position_template_disks = average_centerline(list_centerline=list_centerline,
-                                                                        dataset_info=dataset_info)
-
-# generating the initial template space
-generate_initial_template_space(points_average_centerline=points_average_centerline,
-                                position_template_disks=position_template_disks)
-
-# straightening of all spinal cord
-straighten_all_subjects(dataset_info=dataset_info, contrast='t1')
-
-# converting results to Minc format
-convert_data2mnc(dataset_info, contrast='t1')
-
