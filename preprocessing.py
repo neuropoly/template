@@ -1,10 +1,9 @@
-#!/usr/bin/env python
-
 import json
 import os
 import shutil
 import numpy as np
 import csv
+from copy import copy
 
 import sct_utils as sct
 from msct_types import Centerline
@@ -340,16 +339,16 @@ def average_centerline(list_centerline, dataset_info):
         label_ref = 'C1'
     else:
         raise Exception('ERROR: the images should always have C1 label.')
-    
+
     coord_ref = np.copy(centerline_icbm152.points[centerline_icbm152.index_disk[label_ref]])
 
     position_template_disks = {}
     for disk in average_length:
-        if disk in ['PMJ', 'PMG']:
+        if disk in ['C1', 'PMJ', 'PMG']:
             position_template_disks[disk] = centerline_icbm152.points[centerline_icbm152.index_disk[disk]]
         else:
             coord_disk = coord_ref.copy()
-            coord_disk[2] -= average_positions_from_C1[disk]
+            coord_disk[2] -= average_positions_from_C1[disk] + average_positions_from_C1[label_ref]
             position_template_disks[disk] = coord_disk
 
     # change centerline to be straight below C1
@@ -378,7 +377,7 @@ def average_centerline(list_centerline, dataset_info):
     return points_average_centerline, position_template_disks
 
 
-def generate_initial_template_space(points_average_centerline, position_template_disks):
+def generate_initial_template_space(dataset_info, points_average_centerline, position_template_disks):
     """
     This function generates the initial template space, on which all images will be registered.
     :param points_average_centerline: list of points (x, y, z) of the average spinal cord and brainstem centerline
@@ -414,21 +413,26 @@ def generate_initial_template_space(points_average_centerline, position_template
     template_space.setFileName(path_template + 'template_space.nii.gz')
     template_space.save(type='uint8')
 
-    # generate template centerline
+    # generate template centerline as an image
     image_centerline = template_space.copy()
     for coord in points_average_centerline:
         coord_pix = image_centerline.transfo_phys2pix([coord])[0]
         if 0 <= coord_pix[0] < image_centerline.data.shape[0] and 0 <= coord_pix[1] < image_centerline.data.shape[1] and 0 <= coord_pix[2] < image_centerline.data.shape[2]:
             image_centerline.data[int(coord_pix[0]), int(coord_pix[1]), int(coord_pix[2])] = 1
     image_centerline.setFileName(path_template + 'template_centerline.nii.gz')
-    image_centerline.save(type='uint8')
+    image_centerline.save(type='float32')
 
     # generate template disks position
+    coord_physical = []
     image_disks = template_space.copy()
     for disk in position_template_disks:
         label = labels_regions[disk]
         coord = position_template_disks[disk]
         coord_pix = image_disks.transfo_phys2pix([coord])[0]
+
+        coord = coord.tolist()
+        coord.append(label)
+        coord_physical.append(coord)
         if 0 <= coord_pix[0] < image_disks.data.shape[0] and 0 <= coord_pix[1] < image_disks.data.shape[1] and 0 <= coord_pix[2] < image_disks.data.shape[2]:
             image_disks.data[int(coord_pix[0]), int(coord_pix[1]), int(coord_pix[2])] = label
         else:
@@ -436,6 +440,15 @@ def generate_initial_template_space(points_average_centerline, position_template
             sct.printv('ERROR: the disk label ' + str(disk) + ' is not in the template image.')
     image_disks.setFileName(path_template + 'template_disks.nii.gz')
     image_disks.save(type='uint8')
+
+    # generate template centerline as a npz file
+    x_centerline_fit, y_centerline_fit, z_centerline, x_centerline_deriv, y_centerline_deriv, z_centerline_deriv = smooth_centerline(
+        path_template + 'template_centerline.nii.gz', algo_fitting='nurbs', verbose=0, nurbs_pts_number=4000,
+        all_slices=False, phys_coordinates=True, remove_outliers=True)
+    centerline_template = Centerline(x_centerline_fit, y_centerline_fit, z_centerline,
+                                     x_centerline_deriv, y_centerline_deriv, z_centerline_deriv)
+    centerline_template.compute_vertebral_distribution(coord_physical)
+    centerline_template.save_centerline(fname_output=path_template + 'template_centerline')
 
 
 def straighten_all_subjects(dataset_info, contrast='t1'):
@@ -474,6 +487,143 @@ def straighten_all_subjects(dataset_info, contrast='t1'):
     timer_straightening.stop()
 
 
+def normalize_intensity_template(dataset_info, fname_template_centerline=None, contrast='t1', verbose=1):
+    """
+    This function normalizes the intensity of the image inside the spinal cord
+    :param fname_template: path to template image
+    :param fname_template_centerline: path to template centerline (binary image or npz)
+    :return:
+    """
+
+    path_data = dataset_info['path_data']
+    list_subjects = dataset_info['subjects']
+    path_template = dataset_info['path_template']
+
+    average_intensity = []
+    intensity_profiles = {}
+
+    timer_profile = sct.Timer(len(list_subjects))
+    timer_profile.start()
+
+    # computing the intensity profile for each subject
+    for subject_name in list_subjects:
+        path_data_subject = path_data + subject_name + '/' + contrast + '/'
+        if fname_template_centerline is None:
+            fname_image = path_template + subject_name + '_' + contrast + '.nii.gz'
+            fname_image_centerline = path_data_subject + contrast + dataset_info['suffix_centerline'] + '.nii.gz'
+        else:
+            fname_image = path_data_subject + contrast + '.nii.gz'
+            if fname_template_centerline.endswith('.npz'):
+                fname_image_centerline = None
+            else:
+                fname_image_centerline = fname_template_centerline
+
+        image = Image(fname_image)
+        nx, ny, nz, nt, px, py, pz, pt = image.dim
+
+        if fname_image_centerline is not None:
+            # open centerline from template
+            number_of_points_in_centerline = 4000
+            x_centerline_fit, y_centerline_fit, z_centerline, x_centerline_deriv, y_centerline_deriv, z_centerline_deriv = smooth_centerline(
+                fname_image_centerline, algo_fitting='nurbs', verbose=0,
+                nurbs_pts_number=number_of_points_in_centerline,
+                all_slices=False, phys_coordinates=True, remove_outliers=True)
+            centerline_template = Centerline(x_centerline_fit, y_centerline_fit, z_centerline,
+                                             x_centerline_deriv, y_centerline_deriv, z_centerline_deriv)
+        else:
+            centerline_template = Centerline(fname=fname_template_centerline)
+
+        x, y, z, xd, yd, zd = centerline_template.average_coordinates_over_slices(image)
+
+        # Compute intensity values
+        z_values, intensities = [], []
+        extend = 2  # this means the mean intensity of the slice will be calculated over a 3x3 square
+        for i in range(len(z)):
+            coord_z = image.transfo_phys2pix([[x[i], y[i], z[i]]])[0]
+            z_values.append(coord_z[2])
+            intensities.append(np.mean(image.data[coord_z[0] - extend - 1:coord_z[0] + extend, coord_z[1] - extend - 1:coord_z[1] + extend, coord_z[2]]))
+
+        # for the slices that are not in the image, extend min and max values to cover the whole image
+        min_z, max_z = min(z_values), max(z_values)
+        intensities_temp = copy(intensities)
+        z_values_temp = copy(z_values)
+        for cz in range(nz):
+            if cz not in z_values:
+                z_values_temp.append(cz)
+                if cz < min_z:
+                    intensities_temp.append(intensities[z_values.index(min_z)])
+                elif cz > max_z:
+                    intensities_temp.append(intensities[z_values.index(max_z)])
+                else:
+                    print 'error...', cz
+        intensities = intensities_temp
+        z_values = z_values_temp
+
+        # Preparing data for smoothing
+        arr_int = [[z_values[i], intensities[i]] for i in range(len(z_values))]
+        arr_int.sort(key=lambda x: x[0])  # and make sure it is ordered with z
+
+        def smooth(x, window_len=11, window='hanning'):
+            """smooth the data using a window with requested size.
+            """
+
+            if x.ndim != 1:
+                raise ValueError, "smooth only accepts 1 dimension arrays."
+
+            if x.size < window_len:
+                raise ValueError, "Input vector needs to be bigger than window size."
+
+            if window_len < 3:
+                return x
+
+            if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+                raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+
+            s = np.r_[x[window_len - 1:0:-1], x, x[-2:-window_len - 1:-1]]
+            if window == 'flat':  # moving average
+                w = np.ones(window_len, 'd')
+            else:
+                w = eval('numpy.' + window + '(window_len)')
+
+            y = np.convolve(w / w.sum(), s, mode='same')
+            return y[window_len - 1:-window_len + 1]
+
+        # Smoothing
+        intensities = [c[1] for c in arr_int]
+        intensity_profile_smooth = smooth(np.array(intensities), window_len=50)
+        average_intensity.append(np.mean(intensity_profile_smooth))
+
+        intensity_profiles[subject_name] = intensity_profile_smooth
+
+        if verbose == 2:
+            import matplotlib.pyplot as plt
+            plt.figure()
+            plt.title(subject_name)
+            plt.plot(intensities)
+            plt.plot(intensity_profile_smooth)
+            plt.show()
+
+    # computing the average image intensity over the entire dataset
+    average_intensity = 1000
+
+    # normalize the intensity of the image based on spinal cord
+    for subject_name in list_subjects:
+        path_data_subject = path_data + subject_name + '/' + contrast + '/'
+        fname_image = path_data_subject + contrast + '.nii.gz'
+
+        image = Image(fname_image)
+        nx, ny, nz, nt, px, py, pz, pt = image.dim
+
+        image_image_new = image.copy()
+        for i in range(nz):
+            image_image_new.data[:, :, i] *= average_intensity / intensity_profiles[subject_name][i]
+
+        # Save intensity normalized template
+        fname_image_normalized = sct.add_suffix(fname_image, '_norm')
+        image_image_new.setFileName(fname_image_normalized)
+        image_image_new.save()
+
+
 def create_mask_template(dataset_info, contrast='t1'):
     path_template = dataset_info['path_template']
     subject_name = dataset_info['subjects'][0]
@@ -501,7 +651,7 @@ def convert_data2mnc(dataset_info, contrast='t1'):
     timer_convert = sct.Timer(len(list_subjects))
     timer_convert.start()
     for subject_name in list_subjects:
-        fname_nii = path_template + subject_name + '_' + contrast + '.nii.gz'
+        fname_nii = path_template + subject_name + '_' + contrast + '_norm.nii.gz'
         fname_mnc = path_template + subject_name + '_' + contrast + '.mnc'
         sct.run('nii2mnc ' + fname_nii + ' ' + fname_mnc)
 
