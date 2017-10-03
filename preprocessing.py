@@ -348,7 +348,7 @@ def average_centerline(list_centerline, dataset_info):
             position_template_disks[disk] = centerline_icbm152.points[centerline_icbm152.index_disk[disk]]
         else:
             coord_disk = coord_ref.copy()
-            coord_disk[2] -= average_positions_from_C1[disk] + average_positions_from_C1[label_ref]
+            coord_disk[2] -= average_positions_from_C1[disk] - average_positions_from_C1[label_ref]
             position_template_disks[disk] = coord_disk
 
     # change centerline to be straight below C1
@@ -451,15 +451,23 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
     centerline_template.save_centerline(fname_output=path_template + 'template_centerline')
 
 
-def straighten_all_subjects(dataset_info, contrast='t1'):
+def straighten_all_subjects(dataset_info, normalized=False, contrast='t1'):
     """
     This function straighten all images based on template centerline
     :param dataset_info: dictionary containing dataset information
+    :param normalized: True if images were normalized before straightening
     :param contrast: {'t1', 't2'}
     """
     path_data = dataset_info['path_data']
     path_template = dataset_info['path_template']
     list_subjects = dataset_info['subjects']
+
+    if normalized:
+        fname_in = contrast + '_norm.nii.gz'
+        fname_out = contrast + '_straight_norm.nii.gz'
+    else:
+        fname_in = contrast + '.nii.gz'
+        fname_out = contrast + '_straight.nii.gz'
 
     # straightening of each subject on the new template
     timer_straightening = sct.Timer(len(list_subjects))
@@ -471,7 +479,7 @@ def straighten_all_subjects(dataset_info, contrast='t1'):
         sct.printv('\nStraightening ' + path_data_subject)
         os.chdir(path_data_subject)
         sct.run('sct_straighten_spinalcord'
-                ' -i ' + contrast + '.nii.gz'
+                ' -i ' + fname_in +
                 ' -s ' + contrast + dataset_info['suffix_centerline'] + '.nii.gz'
                 ' -disks-input ' + contrast + dataset_info['suffix_disks'] + '.nii.gz'
                 ' -ref ' + path_template + 'template_centerline.nii.gz'
@@ -479,12 +487,29 @@ def straighten_all_subjects(dataset_info, contrast='t1'):
                 ' -disable-straight2curved'
                 ' -param threshold_distance=1', verbose=1)
 
-        image_straight = Image(contrast + '_straight.nii.gz')
-        image_straight.save(type='uint16')
+        image_straight = Image(sct.add_suffix(fname_in, '_straight'))
+        image_straight.setFileName(fname_out)
+        image_straight.save(type='float32')
 
-        shutil.copy(contrast + '_straight.nii.gz', path_template + subject_name + '_' + contrast + '.nii.gz')
         timer_straightening.add_iteration()
     timer_straightening.stop()
+
+
+def copy_preprocessed_images(dataset_info, contrast='t1'):
+    path_data = dataset_info['path_data']
+    path_template = dataset_info['path_template']
+    list_subjects = dataset_info['subjects']
+
+    fname_in = contrast + '_straight_norm.nii.gz'
+
+    timer_copy = sct.Timer(len(list_subjects))
+    timer_copy.start()
+    for subject_name in list_subjects:
+        path_data_subject = path_data + subject_name + '/' + contrast + '/'
+        os.chdir(path_data_subject)
+        shutil.copy(fname_in, path_template + subject_name + '_' + contrast + '.nii.gz')
+        timer_copy.add_iteration()
+    timer_copy.stop()
 
 
 def normalize_intensity_template(dataset_info, fname_template_centerline=None, contrast='t1', verbose=1):
@@ -509,10 +534,10 @@ def normalize_intensity_template(dataset_info, fname_template_centerline=None, c
     for subject_name in list_subjects:
         path_data_subject = path_data + subject_name + '/' + contrast + '/'
         if fname_template_centerline is None:
-            fname_image = path_template + subject_name + '_' + contrast + '.nii.gz'
+            fname_image = path_data_subject + contrast + '.nii.gz'
             fname_image_centerline = path_data_subject + contrast + dataset_info['suffix_centerline'] + '.nii.gz'
         else:
-            fname_image = path_data_subject + contrast + '.nii.gz'
+            fname_image = path_data_subject + contrast + '_straight.nii.gz'
             if fname_template_centerline.endswith('.npz'):
                 fname_image_centerline = None
             else:
@@ -537,7 +562,7 @@ def normalize_intensity_template(dataset_info, fname_template_centerline=None, c
 
         # Compute intensity values
         z_values, intensities = [], []
-        extend = 2  # this means the mean intensity of the slice will be calculated over a 3x3 square
+        extend = 1  # this means the mean intensity of the slice will be calculated over a 3x3 square
         for i in range(len(z)):
             coord_z = image.transfo_phys2pix([[x[i], y[i], z[i]]])[0]
             z_values.append(coord_z[2])
@@ -583,7 +608,7 @@ def normalize_intensity_template(dataset_info, fname_template_centerline=None, c
             if window == 'flat':  # moving average
                 w = np.ones(window_len, 'd')
             else:
-                w = eval('numpy.' + window + '(window_len)')
+                w = eval('np.' + window + '(window_len)')
 
             y = np.convolve(w / w.sum(), s, mode='same')
             return y[window_len - 1:-window_len + 1]
@@ -603,18 +628,19 @@ def normalize_intensity_template(dataset_info, fname_template_centerline=None, c
             plt.plot(intensity_profile_smooth)
             plt.show()
 
-    # computing the average image intensity over the entire dataset
-    average_intensity = 1000
+    # set the average image intensity over the entire dataset
+    average_intensity = 1000.0
 
     # normalize the intensity of the image based on spinal cord
     for subject_name in list_subjects:
         path_data_subject = path_data + subject_name + '/' + contrast + '/'
-        fname_image = path_data_subject + contrast + '.nii.gz'
+        fname_image = path_data_subject + contrast + '_straight.nii.gz'
 
         image = Image(fname_image)
         nx, ny, nz, nt, px, py, pz, pt = image.dim
 
         image_image_new = image.copy()
+        image_image_new.changeType(type='float32')
         for i in range(nz):
             image_image_new.data[:, :, i] *= average_intensity / intensity_profiles[subject_name][i]
 
@@ -634,6 +660,9 @@ def create_mask_template(dataset_info, contrast='t1'):
     template_mask.setFileName(path_template + 'template_mask.nii.gz')
     template_mask.save()
 
+    # if mask already present, deleting it
+    if os.path.isfile(path_template + 'template_mask.mnc'):
+        os.remove(path_template + 'template_mask.mnc')
     sct.run('nii2mnc ' + path_template + 'template_mask.nii.gz ' + ' ' + path_template + 'template_mask.mnc')
 
     return path_template + 'template_mask.mnc'
@@ -646,13 +675,18 @@ def convert_data2mnc(dataset_info, contrast='t1'):
     path_template_mask = create_mask_template(dataset_info, contrast)
 
     output_list = open('subjects.csv', "wb")
-    writer = csv.writer(output_list, delimiter='', quotechar='"', quoting=csv.QUOTE_ALL)
+    writer = csv.writer(output_list, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
     timer_convert = sct.Timer(len(list_subjects))
     timer_convert.start()
     for subject_name in list_subjects:
-        fname_nii = path_template + subject_name + '_' + contrast + '_norm.nii.gz'
+        fname_nii = path_template + subject_name + '_' + contrast + '.nii.gz'
         fname_mnc = path_template + subject_name + '_' + contrast + '.mnc'
+
+        # if mask already present, deleting it
+        if os.path.isfile(fname_mnc):
+            os.remove(fname_mnc)
+
         sct.run('nii2mnc ' + fname_nii + ' ' + fname_mnc)
 
         writer.writerow(fname_mnc + ',' + path_template_mask)

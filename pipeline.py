@@ -30,8 +30,10 @@ straighten_all_subjects(dataset_info=dataset_info, contrast='t1')
 normalize_intensity_template(dataset_info=dataset_info,
                              fname_template_centerline=dataset_info['path_template'] + 'template_centerline.npz',
                              contrast='t1',
-                             verbose=2)
+                             verbose=1)
+
+# copy preprocessed dataset in template folder
+copy_preprocessed_images(dataset_info=dataset_info, contrast='t1')
 
 # converting results to Minc format
 convert_data2mnc(dataset_info, contrast='t1')
-
