@@ -12,11 +12,13 @@ path_data = download_data_template(path_data='./')
 dataset_info = read_dataset(path_data + 'configuration.json', path_data=path_data)
 
 # generating centerlines
-list_centerline = generate_centerline(dataset_info=dataset_info, contrast='t1')
+list_centerline = generate_centerline(dataset_info=dataset_info, contrast='t1', regenerate=True)
 
 # computing average template centerline and vertebral distribution
 points_average_centerline, position_template_disks = average_centerline(list_centerline=list_centerline,
-                                                                        dataset_info=dataset_info)
+                                                                        dataset_info=dataset_info,
+                                                                        use_ICBM152=False,
+                                                                        use_label_ref='C1')
 
 # generating the initial template space
 generate_initial_template_space(dataset_info=dataset_info,

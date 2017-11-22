@@ -59,7 +59,7 @@ def download_data_template(path_data='./', name='example', force=False):
         raise ValueError('ERROR: data name is wrong. It should be either \'example\' or \'icbm152\'')
 
     if os.path.isdir(path_data + data_name) and not force:
-        print os.path.abspath(path_data + data_name) + '/'
+        print (os.path.abspath(path_data + data_name) + '/')
         return os.path.abspath(path_data + data_name) + '/'
 
     verbose = 2
@@ -81,7 +81,7 @@ def download_data_template(path_data='./', name='example', force=False):
     os.remove(tmp_file)
 
     absolute_path = os.path.abspath(path_data + data_name) + '/'
-    os.chmod(absolute_path, 0755)
+    os.chmod(absolute_path, 0o755)
 
     return absolute_path
 
@@ -128,7 +128,7 @@ def read_dataset(fname_json='configuration.json', path_data='./'):
     if 'path_template' in dataset_info:
         if not os.path.isdir(path_data + dataset_info['path_template']):
             os.makedirs(path_data + dataset_info['path_template'])
-            os.chmod(path_data + dataset_info['path_template'], 0755)
+            os.chmod(path_data + dataset_info['path_template'], 0o755)
         dataset_info['path_template'] = os.path.abspath(path_data + dataset_info['path_template']) + '/'
 
     # if there are some errors, raise an exception
@@ -236,7 +236,7 @@ def compute_ICBM152_centerline(dataset_info):
     return centerline
 
 
-def average_centerline(list_centerline, dataset_info):
+def average_centerline(list_centerline, dataset_info, use_ICBM152=True, use_label_ref=None):
     """
     This function compute the average centerline and vertebral distribution, that will be used to create the
     final template space.
@@ -246,8 +246,9 @@ def average_centerline(list_centerline, dataset_info):
              position_template_disks: index of intervertebral disks along the template centerline
     """
 
-    # extracting centerline from ICBM152
-    centerline_icbm152 = compute_ICBM152_centerline(dataset_info)
+    if use_ICBM152:
+        # extracting centerline from ICBM152
+        centerline_icbm152 = compute_ICBM152_centerline(dataset_info)
 
     # extracting distance of each disk from C1
     list_dist_disks = []
@@ -333,26 +334,43 @@ def average_centerline(list_centerline, dataset_info):
                 disk_position_in_centerline[disk_label] = i * number_of_points_between_levels
 
     # create final template space
-    if 'PMG' in length_vertebral_levels:
-        label_ref = 'PMG'
-    elif 'C1' in length_vertebral_levels:
-        label_ref = 'C1'
-    else:
-        raise Exception('ERROR: the images should always have C1 label.')
 
-    coord_ref = np.copy(centerline_icbm152.points[centerline_icbm152.index_disk[label_ref]])
+    if use_label_ref is not None:
+        label_ref = use_label_ref
+        if label_ref not in length_vertebral_levels:
+            raise Exception('ERROR: the reference label passed in argument ' + label_ref + ' should be present in the images.')
+    else:
+        if 'PMG' in length_vertebral_levels:
+            label_ref = 'PMG'
+        elif 'C1' in length_vertebral_levels:
+            label_ref = 'C1'
+        else:
+            raise Exception('ERROR: the images should always have C1 label.')
 
     position_template_disks = {}
-    for disk in average_length:
-        if disk in ['C1', 'PMJ', 'PMG']:
-            position_template_disks[disk] = centerline_icbm152.points[centerline_icbm152.index_disk[disk]]
-        else:
+
+    if use_ICBM152:
+        coord_ref = np.copy(centerline_icbm152.points[centerline_icbm152.index_disk[label_ref]])
+        for disk in average_length:
+            if disk in ['C1', 'PMJ', 'PMG']:
+                position_template_disks[disk] = centerline_icbm152.points[centerline_icbm152.index_disk[disk]]
+            else:
+                coord_disk = coord_ref.copy()
+                coord_disk[2] -= average_positions_from_C1[disk] - average_positions_from_C1[label_ref]
+                position_template_disks[disk] = coord_disk
+    else:
+        coord_ref = np.array([0.0, 0.0, 0.0])
+        for disk in average_length:
             coord_disk = coord_ref.copy()
             coord_disk[2] -= average_positions_from_C1[disk] - average_positions_from_C1[label_ref]
             position_template_disks[disk] = coord_disk
 
-    # change centerline to be straight below C1
-    index_ref = disk_position_in_centerline[label_ref]
+    # change centerline to be straight below reference if using ICBM152
+    if use_ICBM152:
+        index_straight = disk_position_in_centerline[label_ref]
+    else:  # else: straighten every points along centerline
+        index_straight = 0
+
     points_average_centerline_template = []
     for i in range(0, len(points_average_centerline)):
         current_label = label_points[i]
@@ -360,7 +378,8 @@ def average_centerline(list_centerline, dataset_info):
             length_current_label = average_length[current_label][1]
             relative_position_from_disk = float(i - disk_position_in_centerline[current_label]) / float(number_of_points_between_levels)
             temp_point = np.copy(coord_ref)
-            if i >= index_ref:
+
+            if i >= index_straight:
                 index_current_label = list_labels.index(labels_regions[current_label])
                 next_label = regions_labels[str(list_labels[index_current_label + 1])]
                 if next_label not in average_positions_from_C1:
@@ -369,10 +388,13 @@ def average_centerline(list_centerline, dataset_info):
                     temp_point[2] = coord_ref[2] - average_positions_from_C1[current_label] - abs(relative_position_from_disk * (average_positions_from_C1[current_label] - average_positions_from_C1[next_label]))
             points_average_centerline_template.append(temp_point)
 
-    # append ICBM152 centerline from PMG
-    points_icbm152 = centerline_icbm152.points[centerline_icbm152.index_disk[label_ref]:]
-    points_icbm152 = points_icbm152[::-1]
-    points_average_centerline = np.concatenate([points_icbm152, points_average_centerline_template])
+    if use_ICBM152:
+        # append ICBM152 centerline from PMG
+        points_icbm152 = centerline_icbm152.points[centerline_icbm152.index_disk[label_ref]:]
+        points_icbm152 = points_icbm152[::-1]
+        points_average_centerline = np.concatenate([points_icbm152, points_average_centerline_template])
+    else:
+        points_average_centerline = points_average_centerline_template
 
     return points_average_centerline, position_template_disks
 
@@ -580,7 +602,7 @@ def normalize_intensity_template(dataset_info, fname_template_centerline=None, c
                 elif cz > max_z:
                     intensities_temp.append(intensities[z_values.index(max_z)])
                 else:
-                    print 'error...', cz
+                    print ('error...', cz)
         intensities = intensities_temp
         z_values = z_values_temp
 
