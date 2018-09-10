@@ -4,6 +4,7 @@ import shutil
 import numpy as np
 import csv
 from copy import copy
+from tqdm import tqdm
 
 import sct_utils as sct
 from msct_types import Centerline
@@ -160,8 +161,7 @@ def generate_centerline(dataset_info, contrast='t1', regenerate=False):
 
     current_path = os.getcwd()
 
-    timer_centerline = sct.Timer(len(list_subjects))
-    timer_centerline.start()
+    tqdm_bar = tqdm(total=len(list_subjects), unit='B', unit_scale=True, desc="Status", ascii=True)
     for subject_name in list_subjects:
         path_data_subject = path_data + subject_name + '/' + contrast + '/'
         fname_image_centerline = path_data_subject + contrast + dataset_info['suffix_centerline'] + '.nii.gz'
@@ -196,8 +196,8 @@ def generate_centerline(dataset_info, contrast='t1', regenerate=False):
             centerline.save_centerline(fname_output=fname_centerline)
 
         list_centerline.append(centerline)
-        timer_centerline.add_iteration()
-    timer_centerline.stop()
+        tqdm_bar.update(1)
+    tqdm_bar.close()
 
     os.chdir(current_path)
 
@@ -492,8 +492,7 @@ def straighten_all_subjects(dataset_info, normalized=False, contrast='t1'):
         fname_out = contrast + '_straight.nii.gz'
 
     # straightening of each subject on the new template
-    timer_straightening = sct.Timer(len(list_subjects))
-    timer_straightening.start()
+    tqdm_bar = tqdm(total=len(list_subjects), unit='B', unit_scale=True, desc="Status", ascii=True)
     for subject_name in list_subjects:
         path_data_subject = path_data + subject_name + '/' + contrast + '/'
 
@@ -503,9 +502,9 @@ def straighten_all_subjects(dataset_info, normalized=False, contrast='t1'):
         sct.run('sct_straighten_spinalcord'
                 ' -i ' + fname_in +
                 ' -s ' + contrast + dataset_info['suffix_centerline'] + '.nii.gz'
-                ' -disks-input ' + contrast + dataset_info['suffix_disks'] + '.nii.gz'
-                ' -ref ' + path_template + 'template_centerline.nii.gz'
-                ' -disks-ref ' + path_template + 'template_disks.nii.gz'
+                ' -ldisc_input ' + contrast + dataset_info['suffix_disks'] + '.nii.gz'
+                ' -dest ' + path_template + 'template_centerline.nii.gz'
+                ' -ldisc_dest ' + path_template + 'template_disks.nii.gz'
                 ' -disable-straight2curved'
                 ' -param threshold_distance=1', verbose=1)
 
@@ -513,8 +512,8 @@ def straighten_all_subjects(dataset_info, normalized=False, contrast='t1'):
         image_straight.setFileName(fname_out)
         image_straight.save(type='float32')
 
-        timer_straightening.add_iteration()
-    timer_straightening.stop()
+        tqdm_bar.update(1)
+    tqdm_bar.close()
 
 
 def copy_preprocessed_images(dataset_info, contrast='t1'):
@@ -524,14 +523,13 @@ def copy_preprocessed_images(dataset_info, contrast='t1'):
 
     fname_in = contrast + '_straight_norm.nii.gz'
 
-    timer_copy = sct.Timer(len(list_subjects))
-    timer_copy.start()
+    tqdm_bar = tqdm(total=len(list_subjects), unit='B', unit_scale=True, desc="Status", ascii=True)
     for subject_name in list_subjects:
         path_data_subject = path_data + subject_name + '/' + contrast + '/'
         os.chdir(path_data_subject)
         shutil.copy(fname_in, path_template + subject_name + '_' + contrast + '.nii.gz')
-        timer_copy.add_iteration()
-    timer_copy.stop()
+        tqdm_bar.update(1)
+    tqdm_bar.close()
 
 
 def normalize_intensity_template(dataset_info, fname_template_centerline=None, contrast='t1', verbose=1):
@@ -549,8 +547,7 @@ def normalize_intensity_template(dataset_info, fname_template_centerline=None, c
     average_intensity = []
     intensity_profiles = {}
 
-    timer_profile = sct.Timer(len(list_subjects))
-    timer_profile.start()
+    tqdm_bar = tqdm(total=len(list_subjects), unit='B', unit_scale=True, desc="Status", ascii=True)
 
     # computing the intensity profile for each subject
     for subject_name in list_subjects:
@@ -699,8 +696,7 @@ def convert_data2mnc(dataset_info, contrast='t1'):
     output_list = open('subjects.csv', "wb")
     writer = csv.writer(output_list, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
-    timer_convert = sct.Timer(len(list_subjects))
-    timer_convert.start()
+    tqdm_bar = tqdm(total=len(list_subjects), unit='B', unit_scale=True, desc="Status", ascii=True)
     for subject_name in list_subjects:
         fname_nii = path_template + subject_name + '_' + contrast + '.nii.gz'
         fname_mnc = path_template + subject_name + '_' + contrast + '.mnc'
@@ -713,7 +709,7 @@ def convert_data2mnc(dataset_info, contrast='t1'):
 
         writer.writerow(fname_mnc + ',' + path_template_mask)
 
-        timer_convert.add_iteration()
-    timer_convert.stop()
+        tqdm_bar.update(1)
+    tqdm_bar.close()
 
     output_list.close()
