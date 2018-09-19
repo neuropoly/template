@@ -694,7 +694,7 @@ def convert_data2mnc(dataset_info, contrast='t1'):
     path_template_mask = create_mask_template(dataset_info, contrast)
 
     output_list = open('subjects.csv', "wb")
-    writer = csv.writer(output_list, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
+    writer = csv.writer(output_list, delimiter =',', quotechar=',', quoting=csv.QUOTE_MINIMAL)
 
     tqdm_bar = tqdm(total=len(list_subjects), unit='B', unit_scale=True, desc="Status", ascii=True)
     for subject_name in list_subjects:
@@ -707,7 +707,7 @@ def convert_data2mnc(dataset_info, contrast='t1'):
 
         sct.run('nii2mnc ' + fname_nii + ' ' + fname_mnc)
 
-        writer.writerow(fname_mnc + ',' + path_template_mask)
+        writer.writerow([fname_mnc, path_template_mask])
 
         tqdm_bar.update(1)
     tqdm_bar.close()
