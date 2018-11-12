@@ -18,6 +18,7 @@ Installation:
 Add the following lines to you `~/.bashrc` (change the path): 
 ```
 export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines"
+export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines/"
 export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines/ipl/"
 export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines/ipl"
 ```
