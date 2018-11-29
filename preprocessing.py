@@ -9,7 +9,7 @@ from tqdm import tqdm
 import sct_utils as sct
 from msct_types import Centerline
 from sct_straighten_spinalcord import smooth_centerline
-from msct_image import Image
+from spinalcordtoolbox.image import Image
 from sct_download_data import download_data, unzip
 
 
@@ -52,10 +52,10 @@ def download_data_template(path_data='./', name='example', force=False):
     # Download data
     if name == 'example':
         data_name = 'data'
-        url = 'https://osf.io/umvyk/?action=download'
+        url = 'https://www.neuro.polymtl.ca/_media/downloads/sct/20181128_example_data_template.zip'
     elif name == 'icbm152':
         data_name = 'icbm152'
-        url = 'https://osf.io/ps68c/?action=download'
+        url = 'https://www.neuro.polymtl.ca/_media/downloads/sct/20181128_icbm152.zip'
     else:
         raise ValueError('ERROR: data name is wrong. It should be either \'example\' or \'icbm152\'')
 
@@ -182,7 +182,7 @@ def generate_centerline(dataset_info, contrast='t1', regenerate=False):
             coord_physical = []
             for c in coord:
                 if c.value <= 22 or c.value in [48, 49, 50, 51, 52]:  # 22 corresponds to L2
-                    c_p = im.transfo_pix2phys([[c.x, c.y, c.z]])[0]
+                    c_p = list(im.transfo_pix2phys([[c.x, c.y, c.z]])[0])
                     c_p.append(c.value)
                     coord_physical.append(c_p)
 
@@ -221,7 +221,7 @@ def compute_ICBM152_centerline(dataset_info):
 
     for c in coord:
         if c.value <= 22 or c.value in [48, 49, 50, 51, 52]:  # 22 corresponds to L2
-            c_p = image_disks.transfo_pix2phys([[c.x, c.y, c.z]])[0]
+            c_p = list(image_disks.transfo_pix2phys([[c.x, c.y, c.z]])[0])
             c_p.append(c.value)
             coord_physical.append(c_p)
 
@@ -432,8 +432,7 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
     template_space.hdr.as_analyze_map()['srow_z'][2] = spacing
     template_space.hdr.set_sform(template_space.hdr.get_sform())
     template_space.hdr.set_qform(template_space.hdr.get_sform())
-    template_space.setFileName(path_template + 'template_space.nii.gz')
-    template_space.save(type='uint8')
+    template_space.save(path_template + 'template_space.nii.gz', dtype='uint8')
 
     # generate template centerline as an image
     image_centerline = template_space.copy()
@@ -441,8 +440,7 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
         coord_pix = image_centerline.transfo_phys2pix([coord])[0]
         if 0 <= coord_pix[0] < image_centerline.data.shape[0] and 0 <= coord_pix[1] < image_centerline.data.shape[1] and 0 <= coord_pix[2] < image_centerline.data.shape[2]:
             image_centerline.data[int(coord_pix[0]), int(coord_pix[1]), int(coord_pix[2])] = 1
-    image_centerline.setFileName(path_template + 'template_centerline.nii.gz')
-    image_centerline.save(type='float32')
+    image_centerline.save(path_template + 'template_centerline.nii.gz', dtype='float32')
 
     # generate template disks position
     coord_physical = []
@@ -460,8 +458,7 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
         else:
             sct.printv(str(coord_pix))
             sct.printv('ERROR: the disk label ' + str(disk) + ' is not in the template image.')
-    image_disks.setFileName(path_template + 'template_disks.nii.gz')
-    image_disks.save(type='uint8')
+    image_disks.save(path_template + 'template_disks.nii.gz', dtype='uint8')
 
     # generate template centerline as a npz file
     x_centerline_fit, y_centerline_fit, z_centerline, x_centerline_deriv, y_centerline_deriv, z_centerline_deriv = smooth_centerline(
@@ -509,8 +506,7 @@ def straighten_all_subjects(dataset_info, normalized=False, contrast='t1'):
                 ' -param threshold_distance=1', verbose=1)
 
         image_straight = Image(sct.add_suffix(fname_in, '_straight'))
-        image_straight.setFileName(fname_out)
-        image_straight.save(type='float32')
+        image_straight.save(fname_out, dtype='float32')
 
         tqdm_bar.update(1)
     tqdm_bar.close()
@@ -659,14 +655,13 @@ def normalize_intensity_template(dataset_info, fname_template_centerline=None, c
         nx, ny, nz, nt, px, py, pz, pt = image.dim
 
         image_image_new = image.copy()
-        image_image_new.changeType(type='float32')
+        image_image_new.change_type(dtype='float32')
         for i in range(nz):
             image_image_new.data[:, :, i] *= average_intensity / intensity_profiles[subject_name][i]
 
         # Save intensity normalized template
         fname_image_normalized = sct.add_suffix(fname_image, '_norm')
-        image_image_new.setFileName(fname_image_normalized)
-        image_image_new.save()
+        image_image_new.save(fname_image_normalized)
 
 
 def create_mask_template(dataset_info, contrast='t1'):
@@ -676,8 +671,7 @@ def create_mask_template(dataset_info, contrast='t1'):
     template_mask = Image(path_template + subject_name + '_' + contrast + '.nii.gz')
     template_mask.data *= 0.0
     template_mask.data += 1.0
-    template_mask.setFileName(path_template + 'template_mask.nii.gz')
-    template_mask.save()
+    template_mask.save(path_template + 'template_mask.nii.gz')
 
     # if mask already present, deleting it
     if os.path.isfile(path_template + 'template_mask.mnc'):
