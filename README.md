@@ -25,35 +25,6 @@ export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines/ipl"
 
 You will also need to install `scoop` with: `pip install scoop`
 
-For some reason, the latest version of scoop is not completely compatible with IPL scripts. Briefly, the `scoop.futures:submit()` function does not accept arguments with names. You may have to change the following lines of the script `nist_mni_pipelines/ipl/model/generate_nonlinear.py`:
-
-- 89
-- 134-195
-- 215
-- 227-237
-- 254
-- 266
-
-For example the lines 180-195 become:
-```
-else:
-    transforms.append(
-        futures.submit(
-            non_linear_register_step,
-            s,
-            current_model,
-            sample_xfm,
-            sample_inv_xfm,
-            prev_transform,
-            p['level'],
-            start,
-            symmetric,
-            parameters,
-            prefix,
-            downsample)
-        )
-```
-
 - [Minc Toolkit v2](http://bic-mni.github.io/)
 
 The Minc Toolkit is a dependency of the template generation process.
