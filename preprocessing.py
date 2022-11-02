@@ -6,11 +6,10 @@ import csv
 from copy import copy
 from tqdm import tqdm
 
-import sct_utils as sct
-from msct_types import Centerline
-from sct_straighten_spinalcord import smooth_centerline
+from spinalcordtoolbox import utils as sct
+from spinalcordtoolbox.types import Centerline
 from spinalcordtoolbox.image import Image
-from sct_download_data import download_data, unzip
+from spinalcordtoolbox.download import download_data, unzip
 
 
 labels_regions = {'PMJ': 50, 'PMG': 49,
