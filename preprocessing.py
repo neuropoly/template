@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from spinalcordtoolbox import utils as sct
 from spinalcordtoolbox.types import Centerline
-#from sct_straighten_spinalcord import smooth_centerline
+from spinalcordtoolbox.centerline.core import * 
 from spinalcordtoolbox.image import Image
 from spinalcordtoolbox.download import download_data, unzip
 
