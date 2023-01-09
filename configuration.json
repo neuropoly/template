@@ -1,0 +1,12 @@
+{
+	
+	"path_data": "./template_data",
+
+	"path_template": "./prelim_template",
+
+	"subjects": ["Harshman_Dobby", "Jacobsen_Petri"],
+
+	"suffix_centerline": "_centerline",
+	"suffix_disks": "_disks"
+
+}
