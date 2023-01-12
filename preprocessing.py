@@ -353,7 +353,7 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152=True, use_labe
                 relative_position = 1.0 - relative_position
             list_coordinates = [[]] * len(list_centerline)
             for k, centerline in enumerate(list_centerline):
-                list_coordinates[k] = centerline.get_coordinate_interpolated(disk_label, relative_position)
+                list_coordinates[k] = _get_coordinate_interpolated(self=centerline,vertebral_level=disc_label, relative_position=relative_position)
 
             # average all coordinates
             average_coord = np.nanmean(list_coordinates, axis=0)
