@@ -41,7 +41,32 @@ average_vert_length = {'PMJ': 30.0, 'PMG': 15.0, 'C1': 0.0,
                        'T10': 25.501856729317133, 'T11': 27.619238824308123, 'T12': 29.465119270009946,
                        'L1': 31.89272719870084, 'L2': 33.511890474486449, 'L3': 35.721413718617441}
 
+def _get_coordinate_interpolated(self, vertebral_level, relative_position, backup_index=None, backup_centerline=None, mode='levels'):
+    index_closest = self.get_closest_to_absolute_position(vertebral_level, relative_position, backup_index=backup_index, backup_centerline=backup_centerline, mode=mode)
+    if index_closest is None:
+        return [np.nan, np.nan, np.nan]
 
+    relative_position_closest = self.dist_points_rel[index_closest]
+    coordinate_closest = self.get_point_from_index(index_closest)
+
+    if relative_position < relative_position_closest:
+        index_next = index_closest + 1
+    else:
+        index_next = index_closest - 1
+    relative_position_next = self.dist_points_rel[index_next]
+    coordinate_next = self.get_point_from_index(index_next)
+    if (relative_position_next != relative_position_closest):
+        weight_closest = abs(relative_position - relative_position_closest) / abs(relative_position_next - relative_position_closest)
+        weight_next = abs(relative_position - relative_position_next) / abs(relative_position_next - relative_position_closest)
+    else:
+        weight_closest=1
+        weight_next=0 # same thing!
+    coordinate_result = [weight_closest * coordinate_closest[0] + weight_next * coordinate_next[0],
+                         weight_closest * coordinate_closest[1] + weight_next * coordinate_next[1],
+                         weight_closest * coordinate_closest[2] + weight_next * coordinate_next[2]]
+
+    return coordinate_result
+    
 def download_data_template(path_data='./', name='example', force=False):
     """
     This function downloads the example data and return the path where it was downloaded.
