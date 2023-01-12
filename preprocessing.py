@@ -328,11 +328,19 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152=True, use_labe
             distances_disks_from_C1[regions_labels[str(disk_number)]] = distances_disks_from_C1[regions_labels[str(disk_number - 1)]] + average_length[regions_labels[str(disk_number)]][1]
 
     # calculating disks average distances from C1
+    # reformat dict of distances from C1
+    dist_from_C1 = {}
+    for dist_discs in list_dist_discs:
+        for disc_label in dist_discs:
+            if disc_label in dist_from_C1:
+                dist_from_C1[disc_label].append(dist_discs[disc_label])
+            else:
+                dist_from_C1[disc_label] = [dist_discs[disc_label]]
     average_distances = []
-    for disk_label in distances_disks_from_C1:
-        mean = np.mean(distances_disks_from_C1[disk_label])
-        std = np.std(distances_disks_from_C1[disk_label])
-        average_distances.append([disk_label, mean, std])
+    for disc_label in dist_from_C1:
+        mean = np.mean(dist_from_C1[disc_label])
+        std = np.std(dist_from_C1[disc_label])
+        average_distances.append([disc_label, mean, std]) 
 
     # averaging distances for all subjects and calculating relative positions
     average_distances = sorted(average_distances, key=lambda x: x[1], reverse=False)
