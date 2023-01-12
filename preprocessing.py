@@ -157,7 +157,7 @@ def generate_centerline(dataset_info, contrast='t1', regenerate=False,algo_fitti
     """
     path_data = dataset_info['path_data']
     path_derivatives = path_data + '/derivatives'
-    list_subjects = dataset_info['subjects'].split(', ') # ??? Nadia: I don't like this
+    list_subjects = dataset_info['subjects'].split(', ')
     list_centerline = []
 
     current_path = os.getcwd()
@@ -176,13 +176,13 @@ def generate_centerline(dataset_info, contrast='t1', regenerate=False,algo_fitti
             centerline = Centerline(fname=fname_centerline+'.npz')
         else:
             sct.printv('Extracting centerline from ' + path_data + '/'+subject_name)
+
             # extracting intervertebral disks
             im = Image(fname_image)
             native_orientation=im.orientation
             im.change_orientation('RPI')
             im_seg=Image(fname_image_seg).change_orientation('RPI')
             im_discs = Image(fname_image_discs).change_orientation('RPI')
-
             coord = im_discs.getNonZeroCoordinates(sorting='z', reverse_coord=True)
             
             coord_physical = []
@@ -194,14 +194,13 @@ def generate_centerline(dataset_info, contrast='t1', regenerate=False,algo_fitti
 
             # extracting centerline from binary image and create centerline object with vertebral distribution
             param_centerline = ParamCenterline(algo_fitting=algo_fitting,contrast=contrast,smooth=smooth,degree=degree,minmax=minmax) 
-            # Valuable comments from spinalcordtoolbox.csa_pmj: 
-                # "Linear interpolation (vs. bspline) ensures strong robustness towards defective segmentations at the top slices."
-                # "On top of the linear interpolation we add some smoothing to remove discontinuities."
+                # insights from spinalcordtoolbox.csa_pmj: 
+                    # "Linear interpolation (vs. bspline) ensures strong robustness towards defective segmentations at the top slices."
+                    # "On top of the linear interpolation we add some smoothing to remove discontinuities."
                 
             im_centerline, arr_ctl, arr_ctl_der,fit_results = get_centerline(im_seg,param=param_centerline, verbose=1)
             centerline = Centerline(points_x=arr_ctl[0,:],points_y=arr_ctl[1,:],points_z=arr_ctl[2,:],deriv_x=arr_ctl_der[0,:],deriv_y=arr_ctl_der[1,:],deriv_z=arr_ctl_der[2,:],)
             centerline.compute_vertebral_distribution(coord_physical)
-            #if not os.path.exists(f"{fname_centerline}.nii.gz"): im_centerline.change_orientation(native_orientation).save(f"{fname_centerline}.nii.gz")
             im_centerline.change_orientation(native_orientation).save(f"{fname_centerline}.nii.gz")
             centerline.save_centerline(fname_output=fname_centerline)
         list_centerline.append(centerline)
