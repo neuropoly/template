@@ -6,7 +6,7 @@ The default dataset is an example dataset that is downloaded at the beginning of
 from preprocessing import *
 
 # downloading data and configuration file from OSF
-path_data = "/home/GRAMES.POLYMTL.CA/robana/duke/projects/template_dog_virginiatech/template_data/"
+path_data = "./template_data/"
 
 # extracting info from dataset
 dataset_info = read_dataset('configuration.json')
@@ -27,13 +27,13 @@ generate_initial_template_space(dataset_info=dataset_info,
 straighten_all_subjects(dataset_info=dataset_info, contrast='t1')
 
 # # normalize image intensity inside the spinal cord
-normalize_intensity_template(dataset_info=dataset_info,
-                             fname_template_centerline=dataset_info['path_template'] + 'template_centerline.npz',
-                             contrast='t1',
-                             verbose=1)
+# normalize_intensity_template(dataset_info=dataset_info,
+#                              fname_template_centerline=dataset_info['path_template'] + 'template_centerline.npz',
+#                              contrast='t1',
+#                              verbose=1)
 
-# copy preprocessed dataset in template folder
-copy_preprocessed_images(dataset_info=dataset_info, contrast='t1')
+# # copy preprocessed dataset in template folder
+# copy_preprocessed_images(dataset_info=dataset_info, contrast='t1')
 
-# converting results to Minc format
-convert_data2mnc(dataset_info, contrast='t1')
+# # converting results to Minc format
+# convert_data2mnc(dataset_info, contrast='t1')
