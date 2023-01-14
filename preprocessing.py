@@ -113,7 +113,7 @@ def read_dataset(fname_json='configuration.json'):
     
     return dataset_info
 
-def generate_centerline(dataset_info, contrast='t1', regenerate=False):
+def generate_centerline(dataset_info, contrast='t1',  regenerate=False ,algo_fitting='linear',smooth = 0, degree=None, minmax=None):
     """
     This function generates spinal cord centerline from binary images (either an image of centerline or segmentation)
     :param dataset_info: dictionary containing dataset information
@@ -128,44 +128,46 @@ def generate_centerline(dataset_info, contrast='t1', regenerate=False):
 
     tqdm_bar = tqdm(total=len(list_subjects), unit='B', unit_scale=True, desc="Status", ascii=True)
     for subject_name in list_subjects:
-        path_data_subject = path_data + subject_name + '/' + contrast + '/'
-        fname_image_centerline = path_data_subject + contrast + dataset_info['suffix_centerline'] + '.nii.gz'
+        path_data_subject = path_data + "/" + subject_name + '/' + contrast + '/'
+        fname_image = path_data + "/" + subject_name + '/' + contrast + '/' + contrast + '.nii.gz'
+        fname_image_centerline = path_data_subject + contrast + dataset_info['suffix_centerline']
         fname_image_disks = path_data_subject + contrast + dataset_info['suffix_disks'] + '.nii.gz'
 
-        # go to output folder
-        sct.printv('\nExtracting centerline from ' + path_data_subject)
-        os.chdir(path_data_subject)
-
-        fname_centerline = 'centerline'
         # if centerline exists, we load it, if not, we compute it
-        if os.path.isfile(fname_centerline + '.npz') and not regenerate:
-            centerline = Centerline(fname=path_data_subject + fname_centerline + '.npz')
+        if os.path.isfile(fname_image_centerline + '.npz')  and not regenerate:
+            print("Centerline from subject "+ subject_name +" exists and will not be recomputed!")
+            centerline = Centerline(fname=fname_image_centerline + '.npz')
         else:
+            sct.printv('Extracting centerline from ' + path_data + '/' + subject_name)
             # extracting intervertebral disks
-            im = Image(fname_image_disks)
-            coord = im.getNonZeroCoordinates(sorting='z', reverse_coord=True)
+            im = Image(fname_image)
+            native_orientation=im.orientation
+            im.change_orientation('RPI')
+            im_seg=Image(fname_image_centerline + ".nii.gz").change_orientation('RPI')
+            im_discs = Image(fname_image_disks).change_orientation('RPI')
+
+            coord = im_discs.getNonZeroCoordinates(sorting='z', reverse_coord=True)
+            
             coord_physical = []
             for c in coord:
-                if c.value <= 22 or c.value in [48, 49, 50, 51, 52]:  # 22 corresponds to L2
-                    c_p = list(im.transfo_pix2phys([[c.x, c.y, c.z]])[0])
+                if c.value <= 26 or c.value in [48, 49, 50, 51, 52]:  # 22 corresponds to L2
+                    c_p = list(im_discs.transfo_pix2phys([[c.x, c.y, c.z]])[0])
                     c_p.append(c.value)
                     coord_physical.append(c_p)
 
-            # extracting centerline from binary image and create centerline object with vertebral distribution
-            x_centerline_fit, y_centerline_fit, z_centerline, x_centerline_deriv, y_centerline_deriv, z_centerline_deriv = smooth_centerline(
-                fname_image_centerline, algo_fitting='nurbs',
-                verbose=0, nurbs_pts_number=4000, all_slices=False, phys_coordinates=True, remove_outliers=False)
-            centerline = Centerline(x_centerline_fit, y_centerline_fit, z_centerline,
-                                    x_centerline_deriv, y_centerline_deriv, z_centerline_deriv)
-            centerline.compute_vertebral_distribution(coord_physical)
-            centerline.save_centerline(fname_output=fname_centerline)
 
+            param_centerline = ParamCenterline(algo_fitting=algo_fitting,contrast=contrast,smooth=smooth,degree=degree,minmax=minmax) 
+            
+            centerline = straightening._get_centerline(im_seg,param_centerline, 1)
+
+            centerline.compute_vertebral_distribution(coord_physical)
+            # im_centerline.change_orientation(native_orientation).save(f"{fname_image_centerline}.nii.gz")
+            centerline.save_centerline(fname_output=fname_image_centerline)
+        
         list_centerline.append(centerline)
         tqdm_bar.update(1)
     tqdm_bar.close()
-
     os.chdir(current_path)
-
     return list_centerline
 
 
