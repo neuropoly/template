@@ -1,8 +1,8 @@
 {
 	
-	"path_data": "./template_data",
+	"path_data": "/home/GRAMES.POLYMTL.CA/robana/duke/projects/template_dog_virginiatech/template_data/",
 
-	"path_template": "./prelim_template",
+	"path_template": "/home/GRAMES.POLYMTL.CA/robana/duke/projects/template_dog_virginiatech/prelim_template/",
 
 	"subjects": ["Harshman_Dobby", "Jacobsen_Petri"],
 

@@ -6,29 +6,27 @@ The default dataset is an example dataset that is downloaded at the beginning of
 from preprocessing import *
 
 # downloading data and configuration file from OSF
-path_data = download_data_template(path_data='./')
+path_data = "/home/GRAMES.POLYMTL.CA/robana/duke/projects/template_dog_virginiatech/template_data/"
 
 # extracting info from dataset
-dataset_info = read_dataset(path_data + 'configuration.json', path_data=path_data)
+dataset_info = read_dataset('configuration.json')
 
 # generating centerlines
-list_centerline = generate_centerline(dataset_info=dataset_info, contrast='t1', regenerate=True)
+list_centerline = generate_centerline(dataset_info=dataset_info, contrast='t1',  regenerate=True)
+# list_centerline = generate_centerline(dataset_info=dataset_info, contrast='t2', regenerate=True)
 
 # computing average template centerline and vertebral distribution
-points_average_centerline, position_template_disks = average_centerline(list_centerline=list_centerline,
-                                                                        dataset_info=dataset_info,
-                                                                        use_ICBM152=False,
-                                                                        use_label_ref='C1')
+points_average_centerline, position_template_disks = average_centerline(list_centerline=list_centerline, dataset_info=dataset_info, use_ICBM152=False, use_label_ref='C1')
 
-# generating the initial template space
+# # generating the initial template space
 generate_initial_template_space(dataset_info=dataset_info,
                                 points_average_centerline=points_average_centerline,
                                 position_template_disks=position_template_disks)
 
-# straightening of all spinal cord
+# # straightening of all spinal cord
 straighten_all_subjects(dataset_info=dataset_info, contrast='t1')
 
-# normalize image intensity inside the spinal cord
+# # normalize image intensity inside the spinal cord
 normalize_intensity_template(dataset_info=dataset_info,
                              fname_template_centerline=dataset_info['path_template'] + 'template_centerline.npz',
                              contrast='t1',

@@ -5,35 +5,32 @@ import numpy as np
 import csv
 from copy import copy
 from tqdm import tqdm
+import gzip 
+import nibabel as nib
 
-import sct_utils as sct
-from msct_types import Centerline
-from sct_straighten_spinalcord import smooth_centerline
+from spinalcordtoolbox import *
+from spinalcordtoolbox import straightening
+from spinalcordtoolbox import utils as sct
+from spinalcordtoolbox.types import Centerline
+from spinalcordtoolbox.centerline.core import *
+from spinalcordtoolbox.download import download_data, unzip
 from spinalcordtoolbox.image import Image
-from sct_download_data import download_data, unzip
 
-
-labels_regions = {'PMJ': 50, 'PMG': 49,
-                  'C1': 1, 'C2': 2, 'C3': 3, 'C4': 4, 'C5': 5, 'C6': 6, 'C7': 7,
+labels_regions = {'C1': 1, 'C2': 2, 'C3': 3, 'C4': 4, 'C5': 5, 'C6': 6, 'C7': 7,
                   'T1': 8, 'T2': 9, 'T3': 10, 'T4': 11, 'T5': 12, 'T6': 13, 'T7': 14, 'T8': 15, 'T9': 16, 'T10': 17,
                   'T11': 18, 'T12': 19,
                   'L1': 20, 'L2': 21, 'L3': 22, 'L4': 23, 'L5': 24,
-                  'S1': 25, 'S2': 26, 'S3': 27, 'S4': 28, 'S5': 29,
-                  'Co': 30}
+                  'S1': 25, 'S2': 26}
 
-regions_labels = {'50': 'PMJ', '49': 'PMG',
-                  '1': 'C1', '2': 'C2', '3': 'C3', '4': 'C4', '5': 'C5', '6': 'C6', '7': 'C7',
+regions_labels = {'1': 'C1', '2': 'C2', '3': 'C3', '4': 'C4', '5': 'C5', '6': 'C6', '7': 'C7',
                   '8': 'T1', '9': 'T2', '10': 'T3', '11': 'T4', '12': 'T5', '13': 'T6', '14': 'T7', '15': 'T8',
                   '16': 'T9', '17': 'T10', '18': 'T11', '19': 'T12',
                   '20': 'L1', '21': 'L2', '22': 'L3', '23': 'L4', '24': 'L5',
-                  '25': 'S1', '26': 'S2', '27': 'S3', '28': 'S4', '29': 'S5',
-                  '30': 'Co'}
+                  '25': 'S1', '26': 'S2'}
 
-list_labels = [50, 49, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
-               27, 28, 29, 30]
+list_labels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
 
-average_vert_length = {'PMJ': 30.0, 'PMG': 15.0, 'C1': 0.0,
-                       'C2': 20.176514191661337, 'C3': 17.022090519403065, 'C4': 17.842111671016056,
+average_vert_length = {'C1': 0.0, 'C2': 20.176514191661337, 'C3': 17.022090519403065, 'C4': 17.842111671016056,
                        'C5': 16.800356992319429, 'C6': 16.019212889311383, 'C7': 15.715854192723905,
                        'T1': 16.84466163681078, 'T2': 19.865049296865475, 'T3': 21.550165130933905,
                        'T4': 21.761237991438083, 'T5': 22.633281372803687, 'T6': 23.801974227738132,
@@ -87,7 +84,7 @@ def download_data_template(path_data='./', name='example', force=False):
     return absolute_path
 
 
-def read_dataset(fname_json='configuration.json', path_data='./'):
+def read_dataset(fname_json='configuration.json'):
     """
     This function reads a json file that describes the dataset, including the list of subjects as well as
     suffix for filenames (centerline, disks, segmentations, etc.).
@@ -106,37 +103,6 @@ def read_dataset(fname_json='configuration.json', path_data='./'):
         dataset_temp[str(key)] = dataset_info[key]
     dataset_info = dataset_temp
 
-    error = ''
-
-    # check if required fields are in json file
-    if 'path_data' not in dataset_info:
-        error += 'Dataset info must contain the field \'path_data\'.\n'
-    if 'path_template' not in dataset_info:
-        error += 'Dataset info must contain the field \'path_template\'.\n'
-    if 'subjects' not in dataset_info:
-        error += 'Dataset info must contain a list of subjects.\n'
-    if 'suffix_centerline' not in dataset_info:
-        error += 'Dataset info must contain the field \'suffix_centerline\'.\n'
-    if 'suffix_disks' not in dataset_info:
-        error += 'Dataset info must contain the field \'suffix_disks\'.\n'
-
-    # check if path to data and template exist and are absolute
-    if 'path_data' in dataset_info:
-        if not os.path.isdir(path_data + dataset_info['path_data']):
-            error += 'Path to data (field \'path_data\') must exist.\n'
-        else:
-            dataset_info['path_data'] = os.path.abspath(path_data + dataset_info['path_data']) + '/'
-    if 'path_template' in dataset_info:
-        if not os.path.isdir(path_data + dataset_info['path_template']):
-            os.makedirs(path_data + dataset_info['path_template'])
-            os.chmod(path_data + dataset_info['path_template'], 0o755)
-        dataset_info['path_template'] = os.path.abspath(path_data + dataset_info['path_template']) + '/'
-
-    # if there are some errors, raise an exception
-    if error != '':
-        raise ValueError('JSON file containing dataset info is incomplete:\n' + error)
-
-    # conversion of data to utf-8 instead of unicode - only applies to Python 2
     dataset_info['path_data'] = str(dataset_info['path_data'])
     dataset_info['path_template'] = str(dataset_info['path_template'])
     dataset_info['suffix_centerline'] = str(dataset_info['suffix_centerline'])
@@ -144,9 +110,8 @@ def read_dataset(fname_json='configuration.json', path_data='./'):
     dataset_info['subjects'] = [str(subject) for subject in dataset_info['subjects']]
     if 'suffix_segmentation' in dataset_info:
         dataset_info['suffix_segmentation'] = str(dataset_info['suffix_segmentation'])
-
+    
     return dataset_info
-
 
 def generate_centerline(dataset_info, contrast='t1', regenerate=False):
     """
