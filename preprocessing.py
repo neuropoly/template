@@ -405,7 +405,7 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
     This function generates the initial template space, on which all images will be registered.
     :param points_average_centerline: list of points (x, y, z) of the average spinal cord and brainstem centerline
     :param position_template_disks: index of intervertebral disks along the template centerline
-    :return:
+    :return: NIFTI files in RPI orientation (template space, template centerline, template disc positions) & .npz file of template Centerline object
     """
 
     # initializing variables
