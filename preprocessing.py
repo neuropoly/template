@@ -434,6 +434,7 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
     template_space.hdr.set_sform(template_space.hdr.get_sform())
     template_space.hdr.set_qform(template_space.hdr.get_sform())
     template_space.save(path_template + 'template_space.nii.gz', dtype='uint8')
+    print(f'\nSaving template space in {template_space.orientation} orientation as {path_template}template_space.nii.gz\n')
 
     # generate template centerline as an image
     image_centerline = template_space.copy()
@@ -442,6 +443,7 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
         if 0 <= coord_pix[0] < image_centerline.data.shape[0] and 0 <= coord_pix[1] < image_centerline.data.shape[1] and 0 <= coord_pix[2] < image_centerline.data.shape[2]:
             image_centerline.data[int(coord_pix[0]), int(coord_pix[1]), int(coord_pix[2])] = 1
     image_centerline.save(path_template + 'template_centerline.nii.gz', dtype='float32')
+    print(f'\nSaving template centerline in {image_centerline.orientation} orientation as {path_template}template_centerline.nii.gz\n')
 
     # generate template disks position
     coord_physical = []
@@ -460,6 +462,7 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
             sct.printv(str(coord_pix))
             sct.printv('ERROR: the disk label ' + str(disk) + ' is not in the template image.')
     image_disks.save(path_template + 'template_disks.nii.gz', dtype='uint8')
+    print(f'\nSaving disc positions in {image_discs.orientation} orientation as {path_template}template_discs.nii.gz\n')
 
     # generate template centerline as a npz file
     param_centerline = ParamCenterline(algo_fitting=algo_fitting,contrast=contrast,smooth=smooth,degree=degree,minmax=minmax) 
@@ -467,7 +470,7 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
     centerline_template = straightening._get_centerline(image_centerline,param_centerline,1)
     centerline_template.compute_vertebral_distribution(coord_physical)
     centerline_template.save_centerline(fname_output=path_template+'template_centerline')
-    print(f'Saving template centerline as .npz file (saves all Centerline object information, not just coordinates) as {path_template}template_centerline.npz')
+    print(f'\nSaving template centerline as .npz file (saves all Centerline object information, not just coordinates) as {path_template}template_centerline.npz\n')
 
 
 def straighten_all_subjects(dataset_info, normalized=False, contrast='t1'):
