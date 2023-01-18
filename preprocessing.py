@@ -462,13 +462,12 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
     image_disks.save(path_template + 'template_disks.nii.gz', dtype='uint8')
 
     # generate template centerline as a npz file
-    x_centerline_fit, y_centerline_fit, z_centerline, x_centerline_deriv, y_centerline_deriv, z_centerline_deriv = smooth_centerline(
-        path_template + 'template_centerline.nii.gz', algo_fitting='nurbs', verbose=0, nurbs_pts_number=4000,
-        all_slices=False, phys_coordinates=True, remove_outliers=True)
-    centerline_template = Centerline(x_centerline_fit, y_centerline_fit, z_centerline,
-                                     x_centerline_deriv, y_centerline_deriv, z_centerline_deriv)
+    param_centerline = ParamCenterline(algo_fitting=algo_fitting,contrast=contrast,smooth=smooth,degree=degree,minmax=minmax) 
+        # centerline params of original template centerline had options that you cannot just provide `get_centerline` with anymroe (algo_fitting='nurbs', nurbs_pts_number=4000, all_slices=False, phys_coordinates=True, remove_outliers=True)
+    centerline_template = straightening._get_centerline(image_centerline,param_centerline,1)
     centerline_template.compute_vertebral_distribution(coord_physical)
-    centerline_template.save_centerline(fname_output=path_template + 'template_centerline')
+    centerline_template.save_centerline(fname_output=path_template+'template_centerline')
+    print(f'Saving template centerline as .npz file (saves all Centerline object information, not just coordinates) as {path_template}template_centerline.npz')
 
 
 def straighten_all_subjects(dataset_info, normalized=False, contrast='t1'):
