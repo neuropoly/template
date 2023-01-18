@@ -400,7 +400,7 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152=True, use_labe
     return points_average_centerline, position_template_disks
 
 
-def generate_initial_template_space(dataset_info, points_average_centerline, position_template_disks):
+def generate_initial_template_space(dataset_info, points_average_centerline, position_template_disks,contrast='t1',algo_fitting='linear',smooth=50,degree=None,minmax=None):
     """
     This function generates the initial template space, on which all images will be registered.
     :param points_average_centerline: list of points (x, y, z) of the average spinal cord and brainstem centerline
