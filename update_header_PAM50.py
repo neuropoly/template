@@ -2,7 +2,9 @@
 Update NIFTI header of the histological template to be aligned with the ICBM152 PAM50 template.
 
 Context: the original histological template was aligned with the original PAM50 template. However, the original PAM50
-template was updated to the align with the ICBM152 space. Thus, also the histological template has to be updated.
+template was updated to align with the ICBM152 space. Thus, also the histological template has to be updated.
+
+The script computes translation between the ICBM152 PAM50 and old PAM50 and add it to the histological template
 
 Details: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/2179
 
