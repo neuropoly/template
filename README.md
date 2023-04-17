@@ -67,25 +67,29 @@ The template generation framework can be configured by the file "configuration.j
 - "suffix_segmentation": optional suffix for the spinal cord segmentation, that can be used to register the segmentation on the template space and generate probabilistic atlases.
 
 ## Dataset structure
-The dataset should be arranged in a structured fashion, as the following:
-- subject_name/
-    - t1/
-        - t1.nii.gz
-        - t1{suffix_centerline}.nii.gz
-        - t1{suffix_disks}.nii.gz
-        - t1{suffix_segmentation}.nii.gz
-    - t2/
-        - t2.nii.gz
-        - t2{suffix_centerline}.nii.gz
-        - t2{suffix_disks}.nii.gz
-        - t2{suffix_segmentation}.nii.gz
-    - dmri/
-        - dmri.nii.gz
-        - dmri{suffix_centerline}.nii.gz
-        - dmri{suffix_disks}.nii.gz
-        - bvecs.txt
-        - bvals.txt
+The dataset should be arranged according to the BIDS convention. Using the two examples subjects listed in the `configuration.json` template file, this would be as follows:
+- path_data
+    - sub-101
+        - data_type
+            - 'sub-101' + suffix_image + '.nii.gz'
+            - 'sub-101' + suffix_image + '.json'
+    - sub-102
+        - data_type
+            - 'sub-102' + suffix_image + '.nii.gz'
+            - 'sub-102' + suffix_image + '.json'
     - ...
+    - derivatives
+        - sub-101
+            - data_type
+                - 'sub-101' + suffix_image + suffix_label-SC_seg + '.nii.gz'
+                - 'sub-101' + suffix_image + suffix_label-disc + '.nii.gz'
+                - 'sub-101' + suffix_image + suffix_label-disc + '-manual.nii.gz' # optional, will automatically be prioritized over non-manual if found!
+        - sub-102
+            - data_type
+                - 'sub-102' + suffix_image + suffix_label-SC_seg + '.nii.gz'
+                - 'sub-102' + suffix_image + suffix_label-disc + '.nii.gz'
+                - 'sub-102' + suffix_image + suffix_label-disc + '-manual.nii.gz' # optional
+        - ...
 
 ## Licence
 This repository is under a MIT licence.
