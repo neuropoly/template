@@ -1,0 +1,9 @@
+{
+	"path_data": "/path/to/data/",
+	"subjects": "sub-101, sub-102", /* subject ID prefix according to BIDS convention */
+	"data_type":"anat", /* see BIDS documentation */
+	"contrast":"t1", /* it is not necessarily related to file name; it is related to the contrast that will be called when you use different SCT fxns */
+	"suffix_image": "_rec-composed_T1w", /* suffix after subject id but before file extensions */
+	"suffix_label-SC_seg": "_rec-composed_T1w_label-SC_seg", /* suffix after subject id + suffix_image but before file extensions */
+	"suffix_label-disc":"_rec-composed_T1w_label-disc"/* suffix after subject id + suffix_image but before file extensions */
+}
