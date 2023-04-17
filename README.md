@@ -59,12 +59,13 @@ python -m scoop -n N -vvv generate_template.py
 
 ## How to generate your own template?
 The template generation framework can be configured by the file "configuration.json", that includes the following variables:
-- "path_data": absolute path to the dataset, including all images [correctly structured](#dataset-structure).
-- "path_template": absolute path to the output folder, in which the final template will be placed.
-- "subjects": list of subjects names, that must be the same as folder names in the dataset structure.
-- "suffix_centerline": suffix for binary centerline.
-- "suffix_disks": suffix for binary images of the intervertebral disks labeling.
-- "suffix_segmentation": optional suffix for the spinal cord segmentation, that can be used to register the segmentation on the template space and generate probabilistic atlases.
+- "path_data": absolute path to the dataset, including all images [correctly structured](#dataset-structure); ends with `/`.
+- "subjects": list of subjects names, that must be the same as folder names in the dataset structure (e.g. `sub-101`).
+- "data_type": [BIDS data type](https://bids-standard.github.io/bids-starter-kit/folders_and_files/folders.html#datatype), same as subfolder name in dataset structure (e.g. `anat`).
+- "contrast": it is related to the contrast that will be called when you use different SCT functions (either `t1` or `t2`) and may not not necessarily correspond to the actual data acquisition (e.g. `t1`).
+- "suffix_image": suffix for image data, after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`)
+– "suffix_label-SC_seg": suffix for binary images of the spinal cord mask, after subject id but before file extension (e.g. `_rec-composed_T1w_label-SC_seg` in `sub-101_rec-composed_T1w_label-SC_seg.nii.gz`)
+- "suffix_label-disc": suffix for binary images of the intervertebral disks labeling, after subject id but before file extension (e.g. `_rec-composed_T1w_label-disc` in `sub-101_rec-composed_T1w_label-disc.nii.gz`)
 
 ## Dataset structure
 The dataset should be arranged according to the BIDS convention. Using the two examples subjects listed in the `configuration.json` template file, this would be as follows:
