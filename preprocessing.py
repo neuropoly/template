@@ -108,34 +108,6 @@ def average_coordinates_over_slices(self, image): ### deprecated from latest ver
 
 #     return coordinate_result
 
-def get_lowest_vert_dataset(dataset_info): ### NEW + FIX
-    """
-    This function generates spinal cord centerline from binary images (either an image of centerline or segmentation)
-    :param dataset_info: dictionary containing dataset information
-    :param contrast: {'t1', 't2'}
-    :return list of centerline objects
-    """
-    path_data = dataset_info['path_data']
-    path_derivatives = path_data + 'derivatives'
-    list_subjects = dataset_info['subjects'].split(', ') 
-    lowest_vert = 100
-
-    for subject_name in list_subjects:
-        fname_centerline = path_derivatives + '/' + dataset_info['pipeline_centerline'] + '/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_centerline']
-        if os.path.isfile(fname_centerline + '.npz'):               
-            centerline = Centerline(fname = fname_centerline + '.npz')
-            dist_C1_dict = {}
-            tmp_list = []
-            for key,value in centerline.distance_from_C1label.items(): 
-                if value in tmp_list: continue
-                else:
-                    tmp_list.append(value)
-                    dist_C1_dict[key] = value
-            if len(dist_C1_dict) < lowest_vert: lowest_vert = len(dist_C1_dict)
-        else:
-            print("Centerline for " + subject_name + " does not exist!")
-    return(lowest_vert)
-
 def read_dataset(fname_json = 'configuration.json', path_data = './'): ### TO COMPLETE
     """
     This function reads a json file that describes the dataset, including the list of subjects as well as
