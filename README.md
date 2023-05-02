@@ -92,5 +92,46 @@ The dataset should be arranged according to the BIDS convention. Using the two e
                 - 'sub-102' + suffix_image + suffix_label-disc + '-manual.nii.gz' # optional
         - ...
 
+## Setting up on Compute Canada to generate template
+Once the preprocessing is complete, you will generate the template with `generate_template.py`. This will require  minctoolkit v2, minc2simple and nist-mni-pipelines. The easiest way to set up is to use Compute Canada and set up your environment as follows:
+
+1. Load the right modules and install packages from pip wheel
+```
+module load StdEnv/2020  gcc/9.3.0 minc-toolkit/1.9.18.1 python/3.8.10
+pip install --upgrade pip
+pip install scoop
+```
+
+2. Set up NIST-MNI pipelines
+```
+git clone https://github.com/vfonov/nist_mni_pipelines.git
+nano ~/.bashrc
+```
+add the following:
+```
+export PYTHONPATH="${PYTHONPATH}:/path/to/nist_mni_pipelines"
+export PYTHONPATH="${PYTHONPATH}:/path/to/nist_mni_pipelines/"
+export PYTHONPATH="${PYTHONPATH}:/path/to/nist_mni_pipelines/ipl/"
+export PYTHONPATH="${PYTHONPATH}:/path/to/nist_mni_pipelines/ipl"
+```
+```
+source ~/.bashrc
+```
+3. Minc2simple
+```
+pip install "git+https://github.com/NIST-MNI/minc2-simple.git@develop_new_build#subdirectory=python"
+``` 
+
+4. Create my_job.sh
+```
+#!/bin/bash
+python -m scoop -vvv generate_template.py
+```
+
+5. Batch on Compute Canada
+```
+sbatch --time=24:00:00  --mem-per-cpu 4000 my_job.sh # will probably require batching several times, depending on number of subjects
+```
+
 ## Licence
 This repository is under a MIT licence.
