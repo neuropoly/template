@@ -228,14 +228,16 @@ def generate_centerline(dataset_info, lowest_disc = 25, contrast = 't1', regener
 #     centerline.compute_vertebral_distribution(coord_physical, label_reference = 'PMG')
 #     return centerline
 
-def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_label_ref = None, lowest_disc_quantile = 0.75):
+def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_label_ref = None, lowest_disc_quantile = 0.25):
     """
     This function compute the average centerline and vertebral distribution, that will be used to create the
     final template space.
     :param list_centerline: list of Centerline objects, for all subjects
     :param dataset_info: dictionary containing dataset information
+    :param lowest_disc_quantile: quantile in the distribution of lowest disc labels across subjects (will be used to determine 
+        lowest disc label in the template)
     :return: points_average_centerline: list of points (x, y, z) of the average spinal cord and brainstem centerline
-             position_template_discs: index of intervertebral discs along the template centerline
+        position_template_discs: index of intervertebral discs along the template centerline
     """
 
     # extracting centerline from ICBM152
