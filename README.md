@@ -92,8 +92,9 @@ The dataset should be arranged according to the BIDS convention. Using the two e
                 - 'sub-102' + suffix_image + suffix_label-disc + '-manual.nii.gz' # optional
         - ...
 
-## Setting up on Compute Canada to generate template
-Once the preprocessing is complete, you will generate the template with `generate_template.py`. This will require  minctoolkit v2, minc2simple and nist-mni-pipelines. The easiest way to set up is to use Compute Canada and set up your environment as follows:
+## Setting up on Canada's Alliance CPU cluster to generate template
+
+It is recommended to run the template generation on a large cluster. If you are in Canada, you could make use of [the Alliance](https://alliancecan.ca/en) (formerly Compute Canada), which is a bunch of CPU nodes accessible to researchers in Canada. Once the preprocessing is complete, you will generate the template with `generate_template.py`. This will require  minctoolkit v2, minc2simple and nist-mni-pipelines. The easiest way to set up is to use Compute Canada and set up your environment as follows:
 
 1. Load the right modules and install packages from pip wheel
 ```
@@ -128,7 +129,7 @@ pip install "git+https://github.com/NIST-MNI/minc2-simple.git@develop_new_build#
 python -m scoop -vvv generate_template.py
 ```
 
-5. Batch on Compute Canada
+5. Batch on Alliance Canada
 ```
 sbatch --time=24:00:00  --mem-per-cpu 4000 my_job.sh # will probably require batching several times, depending on number of subjects
 ```
