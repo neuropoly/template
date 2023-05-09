@@ -69,26 +69,25 @@ The template generation framework can be configured by the file "configuration.j
 
 ## Dataset structure
 The dataset should be arranged according to the BIDS convention. Using the two examples subjects listed in the `configuration.json` template file, this would be as follows:
-- path_data
-    - sub-101
-        - data_type
-            - 'sub-101' + suffix_image + '.nii.gz'
-            - 'sub-101' + suffix_image + '.json'
-    - sub-102
-        - data_type
-            - 'sub-102' + suffix_image + '.nii.gz'
-            - 'sub-102' + suffix_image + '.json'
-    - ...
-    - derivatives
-        - sub-101
-            - data_type
-                - 'sub-101' + suffix_image + suffix_label-SC_seg + '.nii.gz'
-                - 'sub-101' + suffix_image + suffix_label-disc + '.nii.gz'
-        - sub-102
-            - data_type
-                - 'sub-102' + suffix_image + suffix_label-SC_seg + '.nii.gz'
-                - 'sub-102' + suffix_image + suffix_label-disc + '.nii.gz'
-        - ...
+dataset/
+└── dataset_description.json
+└── participants.tsv  <-------------------------------- Metadata describing subjects attributes e.g. sex, age, etc.
+└── sub-01  <------------------------------------------ Folder enclosing data for subject 1
+└── sub-02
+└── sub-03
+    └── anat <----------------------------------------- `anat` can be replaced by the value of `data_type` in configuration.json
+        └── sub-03_T1w.nii.gz  <----------------------- MRI image in NIfTI format; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
+        └── sub-03_T1w.json  <------------------------- Metadata including image parameters, MRI vendor, etc.
+        └── sub-03_T2w.nii.gz
+        └── sub-03_T2w.json
+└── derivatives
+    └── labels
+        └── sub-03
+            └── anat
+                └── sub-03_T1w_label-SC_seg.nii.gz  <-- Spinal cord segmentation; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
+                └── sub-03_T1w_label-disc.nii.gz  <---- Disc labels; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
+                └── sub-03_T2w_label-SC_seg.nii.gz
+                └── sub-03_T2w_label-disc.nii.gz
 
 ## Setting up on Canada's Alliance CPU cluster to generate template
 
