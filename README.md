@@ -84,12 +84,10 @@ The dataset should be arranged according to the BIDS convention. Using the two e
             - data_type
                 - 'sub-101' + suffix_image + suffix_label-SC_seg + '.nii.gz'
                 - 'sub-101' + suffix_image + suffix_label-disc + '.nii.gz'
-                - 'sub-101' + suffix_image + suffix_label-disc + '-manual.nii.gz' # optional, will automatically be prioritized over non-manual if found!
         - sub-102
             - data_type
                 - 'sub-102' + suffix_image + suffix_label-SC_seg + '.nii.gz'
                 - 'sub-102' + suffix_image + suffix_label-disc + '.nii.gz'
-                - 'sub-102' + suffix_image + suffix_label-disc + '-manual.nii.gz' # optional
         - ...
 
 ## Setting up on Canada's Alliance CPU cluster to generate template
