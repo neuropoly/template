@@ -69,6 +69,7 @@ The template generation framework can be configured by the file "configuration.j
 
 ## Dataset structure
 The dataset should be arranged according to the BIDS convention. Using the two examples subjects listed in the `configuration.json` template file, this would be as follows:
+```
 dataset/
 └── dataset_description.json
 └── participants.tsv  <-------------------------------- Metadata describing subjects attributes e.g. sex, age, etc.
@@ -88,6 +89,7 @@ dataset/
                 └── sub-03_T1w_label-disc.nii.gz  <---- Disc labels; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
                 └── sub-03_T2w_label-SC_seg.nii.gz
                 └── sub-03_T2w_label-disc.nii.gz
+```
 
 ## Setting up on Canada's Alliance CPU cluster to generate template
 
