@@ -183,7 +183,7 @@ def generate_centerline(dataset_info, lowest_disc = 25, contrast = 't1', regener
                     coord_physical.append(c_p)
 
             # extracting centerline
-            im_ctl, arr_ctl, arr_ctl_der, _ = get_centerline(im_seg, param = param_centerline, space = 'phys')
+            im_ctl, arr_ctl, arr_ctl_der, _ = get_centerline(im_seg, param = param_centerline)
 
             # save centerline as .nii.gz file
             im_ctl.save(fname_centerline + '.nii.gz', dtype = 'float32')
@@ -485,7 +485,7 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
     # generate template centerline as a npz file ##DONE updated template Centerline object creation and saving as .npz file in nb/generate_initial_template_space_branch
     param_centerline = ParamCenterline(algo_fitting = algo_fitting, contrast = contrast, smooth = smooth, degree = degree, minmax = minmax) 
     # centerline params of original template centerline had options that you cannot just provide `get_centerline` with anymroe (algo_fitting = 'nurbs', nurbs_pts_number = 4000, all_slices = False, phys_coordinates = True, remove_outliers = True)
-    _, arr_ctl, arr_ctl_der, _ = get_centerline(image_centerline, param = param_centerline, space = 'phys') ### we don't need to save im_centerline! ### straightening._get_centerline(im_seg,param_centerline, 1) ### What Rohan & Benjamin added!
+    _, arr_ctl, arr_ctl_der, _ = get_centerline(image_centerline, param = param_centerline) ### we don't need to save im_centerline! ### straightening._get_centerline(im_seg,param_centerline, 1) ### What Rohan & Benjamin added!
     centerline_template = Centerline(points_x = arr_ctl[0], points_y = arr_ctl[1], points_z = arr_ctl[2], deriv_x = arr_ctl_der[0], deriv_y = arr_ctl_der[1], deriv_z = arr_ctl_der[2])
     centerline_template.compute_vertebral_distribution(coord_physical)        
     centerline_template.save_centerline(fname_output = path_template + 'template_label-centerline')
