@@ -1,6 +1,7 @@
 # Spinal cord MRI template
 Framework for creating unbiased MRI templates of the spinal cord.
 
+<a name="dependencies_anchor"></a>
 ## Dependencies
 - [Spinal Cord Toolbox (SCT)](https://github.com/neuropoly/spinalcordtoolbox) version 5.8
 
@@ -60,13 +61,13 @@ dataset/
 ```
 ## Getting started: data preprocessing
 
+### Dependencies for data preprocessing (see [dependencies](#dependencies_anchor))
+- [Spinal Cord Toolbox (SCT)](https://github.com/neuropoly/spinalcordtoolbox) version 5.8
+
 ### A. Segment spinal cord and vertebral discs
 
-Note:
-* SCT functions treat your images with bright CSF as "T2w" (i.e. `t2` option) and dark CSF as "T1w" (i.e. `t1` option).
-* You can therefore still use SCT even if your images are not actually T1w and T2w.
+Note that SCT functions treat your images with bright CSF as "T2w" (i.e. `t2` option) and dark CSF as "T1w" (i.e. `t1` option). You can therefore still use SCT even if your images are not actually T1w and T2w.
 
-1. Set up SCT (see [dependencies](#Dependencies)).
 1. Update `segment_sc_discs_deepseg.sh`:
 	* Make sure to modify the suffix names for your T2w-like and T1w-like images (SUFFIX_T2w, SUFFIX_T1w) on lines 28 and 29 according to the naming convention in your dataset.
 	* If you do not have 2 types of images for each subject, make sure to comment out the appropriate code.
@@ -82,7 +83,7 @@ Note:
 * Spinal cord masks and disc labels can be displayed by opening: `/PATH/TO/dataset/derivatives/labels/qc/index.html`
 * See [tutorial](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) for tips on how to QC and fix disc labels manually.
 
-### B. Preparing data for template-generation
+### B. Prepare data for template generation
 
 `template_preprocessing_pipeline.py` contains several functions to preprocess spinal cord MRI data for template generation. Preprocessing includes:
 * extracting the spinal cord centerline and compute the vertebral distribution along the spinal cord, for all subjects.
@@ -90,16 +91,8 @@ Note:
 * generating the initial template space, based on the average centerline and positions of intervertebral disks.
 * straightening of all subjects on the initial template space
 
-1. Create a configuration file according to `configuration_template.json`.
-2. Determine the integer value corresponding to the label of the lowest disc until which you want your template to go (depends on the lowest disc available in your images, nomenclature can be found [here](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling/labeling-conventions.html)).
-3. Run the following:
-```
-python template_preprocessing_pipeline.py configuration.json LOWEST_DISC
-```
-4. One the preprocessing is performed, please check your data. The preprocessing results should be a series of straight images registered in the same space, with all the vertebral levels aligned with each others.
-
-## How to generate your own template?
-The template generation framework can be configured by the file "configuration.json", that includes the following variables:
+Here are the steps to go through:
+1. The template generation framework can be configured by the file "configuration.json", that includes the following variables:
 - "path_data": absolute path to the dataset, including all images [correctly structured](#dataset-structure); ends with `/`.
 - "subjects": list of subjects names, that must be the same as folder names in the dataset structure (e.g. `sub-101`).
 - "data_type": [BIDS data type](https://bids-standard.github.io/bids-starter-kit/folders_and_files/folders.html#datatype), same as subfolder name in dataset structure (e.g. `anat`).
@@ -107,9 +100,22 @@ The template generation framework can be configured by the file "configuration.j
 - "suffix_image": suffix for image data, after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`)
 – "suffix_label-SC_seg": suffix for binary images of the spinal cord mask, after subject id but before file extension (e.g. `_rec-composed_T1w_label-SC_seg` in `sub-101_rec-composed_T1w_label-SC_seg.nii.gz`)
 - "suffix_label-disc": suffix for binary images of the intervertebral disks labeling, after subject id but before file extension (e.g. `_rec-composed_T1w_label-disc` in `sub-101_rec-composed_T1w_label-disc.nii.gz`)
+2. Determine the integer value corresponding to the label of the lowest disc until which you want your template to go (depends on the lowest disc available in your images, nomenclature can be found [here](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling/labeling-conventions.html)).
+3. Run:
+```
+python template_preprocessing_pipeline.py configuration.json LOWEST_DISC
+```
+4. One the preprocessing is performed, please check your data. The preprocessing results should be a series of straight images registered in the same space, with all the vertebral levels aligned with each others.
+
+## How to generate your own template?
+
+### Dependencies for template generation (see [dependencies](#dependencies_anchor))
+- [ANIMAL registration framework, part of the IPL longitudinal pipeline](https://github.com/vfonov/nist_mni_pipelines)
+- `scoop` (PyPI)
+- [Minc Toolkit v2](http://bic-mni.github.io/)
+- [minc2_simple](https://github.com/vfonov/minc2-simple)
 
 Now, you can generate the template using the IPL pipeline with the following command, where N has to be replace by the number of subjects:
-
 ```
 python -m scoop -n N -vvv generate_template.py
 ```
