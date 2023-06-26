@@ -3,7 +3,7 @@ This script calls all the methods required for the data preprocessing.
 The default dataset is an example dataset that is downloaded at the beginning of the script.
 """
 
-from preprocessing import *
+from template_preprocessing import *
 import sys
 
 dataset_info = read_dataset(sys.argv[1])
