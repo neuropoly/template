@@ -69,12 +69,12 @@ Note:
 1. Update `segment_sc_discs_deepseg.sh`:
 	* Make sure to modify the suffix names for your T2w-like and T1w-like images (SUFFIX_T2w, SUFFIX_T1w) on lines 28 and 29 according to the naming convention in your dataset.
 	* If you do not have 2 types of images for each subject, make sure to comment out the appropriate code.
-2. Update `segmentation_batching_script.sh`:
+2. Update `segmentat_batching_script.sh`:
 	* Update the options according to your own dataset.
 
 3. Run:
 ```
-./batching_script.sh # this calls segment_sc_discs_deepseg.sh
+./segment_batching_script.sh # this calls segment_sc_discs_deepseg.sh
 ```
 
 4. Quality control (QC):
