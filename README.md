@@ -2,7 +2,7 @@
 Framework for creating unbiased MRI templates of the spinal cord.
 
 ## Dependencies
-- [Spinal Cord Toolbox (SCT)](https://github.com/neuropoly/spinalcordtoolbox) version 5.8, `commit 7ead83200d7ad9ee5e0d112e77a1d7b894add738`
+- [Spinal Cord Toolbox (SCT)](https://github.com/neuropoly/spinalcordtoolbox) version 5.8
 
 SCT is used for all preprocessing steps, including extraction of centerline, generation of average centerline in the template space, and straightening/registration of all spinal cord images on the initial template space. The current version of the pipeline uses SCT 5.8 in development mode (commit `7ead83200d7ad9ee5e0d112e77a1d7b894add738`) as we prepare for the release of SCT 6.0.
 
@@ -37,6 +37,7 @@ Install this python library in SCT python.
 
 ## Dataset structure
 The dataset should be arranged according to the BIDS convention. Using the two examples subjects listed in the `configuration.json` template file, this would be as follows:
+```
 dataset/
 └── dataset_description.json
 └── participants.tsv  <-------------------------------- Metadata describing subjects attributes e.g. sex, age, etc.
@@ -56,10 +57,10 @@ dataset/
                 └── sub-03_T1w_label-disc.nii.gz  <---- Disc labels; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
                 └── sub-03_T2w_label-SC_seg.nii.gz
                 └── sub-03_T2w_label-disc.nii.gz
-
+```
 ## Getting started: data preprocessing
 
-### Segment spinal cord and vertebral discs
+### A. Segment spinal cord and vertebral discs
 
 Note:
 * SCT functions treat your images with bright CSF as "T2w" (i.e. `t2` option) and dark CSF as "T1w" (i.e. `t1` option).
@@ -81,7 +82,7 @@ Note:
 * Spinal cord masks and disc labels can be displayed by opening: `/PATH/TO/dataset/derivatives/labels/qc/index.html`
 * See [tutorial](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) for tips on how to QC and fix disc labels manually.
 
-### Preparing data for template-generation
+### B. Preparing data for template-generation
 
 `template_preprocessing_pipeline.py` contains several functions to preprocess spinal cord MRI data for template generation. Preprocessing includes:
 * extracting the spinal cord centerline and compute the vertebral distribution along the spinal cord, for all subjects.
