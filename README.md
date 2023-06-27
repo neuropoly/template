@@ -1,12 +1,7 @@
 # Spinal cord MRI template
-Framework for creating MRI templates of the spinal cord.
 
-<a name="dependencies_anchor"></a>
-## Dependencies
+Framework for creating MRI templates of the spinal cord. The framework has two distinct pipelines, which has to be run sequentially: [Data preprocessing](#data-preprocessing) and [Template creation](#template-creation).
 
-### [Spinal Cord Toolbox (SCT)](https://github.com/neuropoly/spinalcordtoolbox) version 5.8
-
-SCT is used for all preprocessing steps, including extraction of centerline, generation of average centerline in the template space, and straightening/registration of all spinal cord images on the initial template space. The current version of the pipeline uses SCT 5.8 in development mode (commit `7ead83200d7ad9ee5e0d112e77a1d7b894add738`) as we prepare for the release of SCT 6.0.
 
 ### [ANIMAL registration framework](https://github.com/vfonov/nist_mni_pipelines)
 
@@ -62,36 +57,46 @@ dataset/
                 └── sub-03_T2w_label-SC_seg.nii.gz
                 └── sub-03_T2w_label-disc.nii.gz
 ```
-## Getting started: data preprocessing
+## Data preprocessing
 
-### Dependencies for data preprocessing (see [dependencies](#dependencies_anchor))
-- [Spinal Cord Toolbox (SCT)](https://github.com/neuropoly/spinalcordtoolbox) version 5.8
+### Install SCT
 
-### A. Segment spinal cord and vertebral discs
+SCT is used for all preprocessing steps, including extraction of centerline, generation of average centerline in the template space, and straightening/registration of all spinal cord images on the initial template space. The current version of the pipeline uses SCT development version (commit `7ead83200d7ad9ee5e0d112e77a1d7b894add738`) as we prepare for the release of SCT 6.0.
+
+Once SCT is installed, make sure to activate SCT's virtual environment because the pipeline will use SCT's API functions.
+
+```
+source ${SCT_DIR}/python/etc/profile.d/conda.sh
+conda activate venv_sct
+```
+
+### Segment spinal cord and vertebral discs
 
 Note that SCT functions treat your images with bright CSF as "T2w" (i.e. `t2` option) and dark CSF as "T1w" (i.e. `t1` option). You can therefore still use SCT even if your images are not actually T1w and T2w.
 
-1. Update `segment_sc_discs_deepseg.sh`:
-	* Make sure to modify the suffix names for your T2w-like and T1w-like images (SUFFIX_T2w, SUFFIX_T1w) on lines 28 and 29 according to the naming convention in your dataset.
-	* If you do not have 2 types of images for each subject, make sure to comment out the appropriate code.
-2. Update `segmentat_batching_script.sh`:
-	* Update the options according to your own dataset.
+#### Update `segment_sc_discs_deepseg.sh`
+  * Make sure to modify the suffix names for your T2w-like and T1w-like images (SUFFIX_T2w, SUFFIX_T1w) according to the naming convention in your dataset.
+  * If you do not have 2 types of images for each subject, make sure to comment out the appropriate code.
 
-3. Run:
+#### Run script
 ```
-./segment_batching_script.sh # this calls segment_sc_discs_deepseg.sh
+sct_run_batch -job 10 -path-data "/PATH/TO/dataset" -script segment_sc_discs_deepseg.sh -path-output "/PATH/TO/dataset/derivatives/labels"
 ```
 
-4. Quality control (QC):
+> **Note**
+> Replace values appropriately based on your setup
+
+#### Quality control (QC)
+
 * Spinal cord masks and disc labels can be displayed by opening: `/PATH/TO/dataset/derivatives/labels/qc/index.html`
 * See [tutorial](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) for tips on how to QC and fix disc labels manually.
 
-### B. Prepare data for template generation
+### Prepare data for template generation
 
 `template_preprocessing_pipeline.py` contains several functions to preprocess spinal cord MRI data for template generation. Preprocessing includes:
 * extracting the spinal cord centerline and compute the vertebral distribution along the spinal cord, for all subjects.
 * computing the average centerline, by averaging the position of each intervertebral disks. The average centerline of the spinal cord is straightened and merged with the ICBM152 template.
-* generating the initial template space, based on the average centerline and positions of intervertebral disks.
+* generating the initial template space, based on the average centerline and positions of intervertebral discs.
 * straightening of all subjects on the initial template space
 
 Here are the steps to go through:
@@ -108,9 +113,11 @@ Here are the steps to go through:
 ```
 python template_preprocessing_pipeline.py configuration.json LOWEST_DISC
 ```
+
 4. One the preprocessing is performed, please check your data. The preprocessing results should be a series of straight images registered in the same space, with all the vertebral levels aligned with each others.
 
-## How to generate your own template?
+
+## Template creation
 
 ### Dependencies for template generation (see [dependencies](#dependencies_anchor))
 - [ANIMAL registration framework, part of the IPL longitudinal pipeline](https://github.com/vfonov/nist_mni_pipelines)
