@@ -1,15 +1,16 @@
 # Spinal cord MRI template
-Framework for creating unbiased MRI templates of the spinal cord.
+Framework for creating MRI templates of the spinal cord.
 
 <a name="dependencies_anchor"></a>
 ## Dependencies
-- [Spinal Cord Toolbox (SCT)](https://github.com/neuropoly/spinalcordtoolbox) version 5.8
+
+### [Spinal Cord Toolbox (SCT)](https://github.com/neuropoly/spinalcordtoolbox) version 5.8
 
 SCT is used for all preprocessing steps, including extraction of centerline, generation of average centerline in the template space, and straightening/registration of all spinal cord images on the initial template space. The current version of the pipeline uses SCT 5.8 in development mode (commit `7ead83200d7ad9ee5e0d112e77a1d7b894add738`) as we prepare for the release of SCT 6.0.
 
-- [ANIMAL registration framework, part of the IPL longitudinal pipeline](https://github.com/vfonov/nist_mni_pipelines)
+### [ANIMAL registration framework](https://github.com/vfonov/nist_mni_pipelines)
 
-ANIMAL is used for generating the template, using iterative nonlinear deformation.
+ANIMAL, part of the IPL longitudinal pipeline, is used for generating the template, using iterative nonlinear deformation.
 The recommanded pipeline for generating a template of the spinal cord is the [nonlinear symmetrical template model](https://github.com/vfonov/nist_mni_pipelines/blob/master/examples/synthetic_tests/test_model_creation/scoop_test_nl_sym.py).
 
 Installation:
@@ -24,15 +25,17 @@ export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines/ipl/"
 export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines/ipl"
 ```
 
-You will also need to install `scoop` with: `pip install scoop`
-
-- [Minc Toolkit v2](http://bic-mni.github.io/)
+### [Minc Toolkit v2](http://bic-mni.github.io/)
 
 The Minc Toolkit is a dependency of the template generation process.
 
-On OSX, you may need to recompile Minc Toolkit from source to make sure all libraires are linked correctly.
+You will also need to install `scoop` with: `pip install scoop`
 
-- [minc2_simple](https://github.com/vfonov/minc2-simple)
+On macOs, you may need to recompile Minc Toolkit from source to make sure all libraires are linked correctly.
+
+On Linux: TODO
+
+### [minc2_simple](https://github.com/vfonov/minc2-simple)
 
 Install this python library in SCT python.
 
