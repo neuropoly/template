@@ -101,12 +101,12 @@ sct_run_batch -job 10 -path-data "/PATH/TO/dataset" -script segment_sc_discs_dee
 
 Here are the steps to go through:
 1. The template generation framework can be configured by the file "configuration.json", that includes the following variables:
-- "path_data": absolute path to the dataset, including all images [correctly structured](#dataset-structure); ends with `/`.
-- "subjects": list of subjects names, that must be the same as folder names in the dataset structure (e.g. `sub-101`).
-- "data_type": [BIDS data type](https://bids-standard.github.io/bids-starter-kit/folders_and_files/folders.html#datatype), same as subfolder name in dataset structure (e.g. `anat`).
-- "contrast": it is related to the contrast that will be called when you use different SCT functions (either `t1` or `t2`) and may not not necessarily correspond to the actual data acquisition (e.g. `t1`).
+- `path_data`: absolute path to the dataset, including all images [correctly structured](#dataset-structure); ends with `/`.
+- `subjects`: List of subjects to include in the preprocessing, separated with comma.
+- `data_type`: [BIDS data type](https://bids-standard.github.io/bids-starter-kit/folders_and_files/folders.html#datatype), same as subfolder name in dataset structure.
+- `contrast`: Contrast to preprocess.
 - "suffix_image": suffix for image data, after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`)
-– "suffix_label-SC_seg": suffix for binary images of the spinal cord mask, after subject id but before file extension (e.g. `_rec-composed_T1w_label-SC_seg` in `sub-101_rec-composed_T1w_label-SC_seg.nii.gz`)
+– "suffix_label-SC_seg": suffix for binary images of the spinal cord mask, after subject ID but before file extension (e.g. `_rec-composed_T1w_label-SC_seg` in `sub-101_rec-composed_T1w_label-SC_seg.nii.gz`)
 - "suffix_label-disc": suffix for binary images of the intervertebral disks labeling, after subject id but before file extension (e.g. `_rec-composed_T1w_label-disc` in `sub-101_rec-composed_T1w_label-disc.nii.gz`)
 2. Determine the integer value corresponding to the label of the lowest disc until which you want your template to go (depends on the lowest disc available in your images, nomenclature can be found [here](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling/labeling-conventions.html)).
 3. Run:
