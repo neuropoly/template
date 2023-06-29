@@ -97,35 +97,39 @@ Copy the file `configuration_default.json` and rename it as `configuration.json`
 - `suffix_label-disc`: Suffix for the images of the intervertebral discs labeling, after `suffix_image` (e.g. `_label-disc`).
 
 > **Note**
+> Note that SCT functions treat your images with bright CSF as "T2w" (i.e. `t2` option) and dark CSF as "T1w" (i.e. `t1` option). You can therefore still use SCT even if your images are not actually T1w and T2w.
+
+> **Note**
 > If you wish to make a template that does not align discs across subjects, please open an [issue](https://github.com/neuropoly/template/issues) and we will follow-up with you.
 
 
 ### Segment spinal cord and vertebral discs
 
-Note that SCT functions treat your images with bright CSF as "T2w" (i.e. `t2` option) and dark CSF as "T1w" (i.e. `t1` option). You can therefore still use SCT even if your images are not actually T1w and T2w.
-
 Run script:
 ```
-sct_run_batch -jobs 10 -path-data "/PATH/TO/dataset" -script segment_sc_discs_deepseg.sh -path-output "/PATH/TO/dataset/derivatives/labels"
+sct_run_batch -jobs 10 -path-data "/PATH/TO/dataset" -script segment_sc_discs_deepseg.sh -path-output "/PATH/TO/results"
 ```
 
 > **Note**
-> Replace values appropriately based on your setup (eg: -jobs 10 means that 10 CPU-cores are used. If you have 
+> Replace values appropriately based on your setup (eg: -jobs 10 means that 10 CPU-cores are used. For more details, run `sct_run_batch -h`).
 
-#### Quality control (QC)
 
-* Spinal cord masks and disc labels can be displayed by opening: `/PATH/TO/dataset/derivatives/labels/qc/index.html`
-* See [tutorial](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) for tips on how to QC and fix disc labels manually.
+### Quality control (QC)
 
-### Prepare data for template generation
+* Spinal cord segmentation (or centerlines) and disc labels can be displayed by opening: `/PATH/TO/results/qc/index.html`
+* See [tutorial](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) for tips on how to QC and fix segmentation (or centerline) and/or disc labels manually.
 
-`template_preprocessing_pipeline.py` contains several functions to preprocess spinal cord MRI data for template generation. Preprocessing includes:
-* extracting the spinal cord centerline and compute the vertebral distribution along the spinal cord, for all subjects.
-* computing the average centerline, by averaging the position of each intervertebral disks. The average centerline of the spinal cord is straightened and merged with the ICBM152 template.
-* generating the initial template space, based on the average centerline and positions of intervertebral discs.
-* straightening of all subjects on the initial template space
+
+### Normalize spinal cord across subjects
+
+`template_preprocessing_pipeline.py` contains several functions to normalize the spinal cord across subjects, in preparation for template generation. More specifically:
+* Extracting the spinal cord centerline and compute the vertebral distribution along the spinal cord, for all subjects,
+* Computing the average centerline, by averaging the position of each intervertebral discs. The average centerline of the spinal cord is straightened,
+* Generating the initial template space, based on the average centerline and positions of intervertebral discs,
+* Straightening of all subjects' spinal cord on the initial template space.
 
 2. Determine the integer value corresponding to the label of the lowest disc until which you want your template to go (depends on the lowest disc available in your images, nomenclature can be found [here](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling/labeling-conventions.html)).
+
 3. Run:
 ```
 python template_preprocessing_pipeline.py configuration.json LOWEST_DISC
@@ -188,6 +192,11 @@ python -m scoop -vvv generate_template.py
 ```
 sbatch --time=24:00:00  --mem-per-cpu 4000 my_job.sh # will probably require batching several times, depending on number of subjects
 ```
+
+## Additional information
+
+To have the generated template registered to an existing space (eg, ICBM152), please open an [issue](https://github.com/neuropoly/template/issues) and we will follow-up with you.
+
 
 ## Licence
 This repository is under a MIT licence.
