@@ -3,7 +3,7 @@
 Framework for creating MRI templates of the spinal cord. The framework has two distinct pipelines, which has to be run sequentially: [Data preprocessing](#data-preprocessing) and [Template creation](#template-creation). 
 
 > **Important**
-> The framework has to be run independently for each contrast. In the end, the generated templates across contrasts should be perfectly aligned.
+> The framework has to be run independently for each contrast. In the end, the generated templates across contrasts should be perfectly aligned. This is what was done for the PAM50 template.
 
 
 ### [ANIMAL registration framework](https://github.com/vfonov/nist_mni_pipelines)
@@ -91,9 +91,9 @@ Copy the file `configuration_default.json` and rename it as `configuration.json`
 - `path_data`: Absolute path to the input [BIDS dataset](#dataset-structure); The path should end with `/`.
 - `subjects`: List of subjects to include in the preprocessing, separated with comma.
 - `data_type`: [BIDS data type](https://bids-standard.github.io/bids-starter-kit/folders_and_files/folders.html#datatype), same as subfolder name in dataset structure. Typically, it should be "anat".
-- `contrast`: Contrast to preprocess.
-- "suffix_image": suffix for image data, after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`)
-– "suffix_label-SC_seg": suffix for binary images of the spinal cord mask, after subject ID but before file extension (e.g. `_rec-composed_T1w_label-SC_seg` in `sub-101_rec-composed_T1w_label-SC_seg.nii.gz`)
+- `contrast`: Contrast to be used by `sct_deepseg_sc` function.
+- `suffix_image`: Suffix for image data, after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`)
+– `suffix_label-SC_seg`: Suffix for binary images of the spinal cord mask, after `suffix_image` (e.g. `_label-SC_seg`).
 - "suffix_label-disc": suffix for binary images of the intervertebral disks labeling, after subject id but before file extension (e.g. `_rec-composed_T1w_label-disc` in `sub-101_rec-composed_T1w_label-disc.nii.gz`)
 - 
 ### Segment spinal cord and vertebral discs
