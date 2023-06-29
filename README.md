@@ -1,6 +1,9 @@
 # Spinal cord MRI template
 
-Framework for creating MRI templates of the spinal cord. The framework has two distinct pipelines, which has to be run sequentially: [Data preprocessing](#data-preprocessing) and [Template creation](#template-creation).
+Framework for creating MRI templates of the spinal cord. The framework has two distinct pipelines, which has to be run sequentially: [Data preprocessing](#data-preprocessing) and [Template creation](#template-creation). 
+
+> **Important**
+> The framework has to be run independently for each contrast. In the end, the generated templates across contrasts should be perfectly aligned.
 
 
 ### [ANIMAL registration framework](https://github.com/vfonov/nist_mni_pipelines)
@@ -57,11 +60,22 @@ dataset/
                 └── sub-03_T2w_label-SC_seg.nii.gz
                 └── sub-03_T2w_label-disc.nii.gz
 ```
+
+
 ## Data preprocessing
+
+This pipeline includes the following steps:
+
+TODO: remove detials below
+1. Segmentation of SC and disc labeling
+2. QC. If seg didn't work, fix SC seg. If disc labeling did not work, fix labeling.
+3. `configuration_default.json`: Copy this file and rename it as `configuration.json`. Edit it and modify according to your setup.
+4. Extraction of SC centerline, generation of average centerline in the template space, straightening/registration of all spinal cord images on the initial template space. 
+
 
 ### Install SCT
 
-SCT is used for all preprocessing steps, including extraction of centerline, generation of average centerline in the template space, and straightening/registration of all spinal cord images on the initial template space. The current version of the pipeline uses SCT development version (commit `7ead83200d7ad9ee5e0d112e77a1d7b894add738`) as we prepare for the release of SCT 6.0.
+SCT is used for all preprocessing steps. The current version of the pipeline uses SCT development version (commit `7ead83200d7ad9ee5e0d112e77a1d7b894add738`) as we prepare for the release of SCT 6.0.
 
 Once SCT is installed, make sure to activate SCT's virtual environment because the pipeline will use SCT's API functions.
 
@@ -70,21 +84,29 @@ source ${SCT_DIR}/python/etc/profile.d/conda.sh
 conda activate venv_sct
 ```
 
+### Edit configuration file
+
+Copy the file `configuration_default.json` and rename it as `configuration.json`. Edit it and modify according to your setup:
+
+- `path_data`: Absolute path to the input [BIDS dataset](#dataset-structure); The path should end with `/`.
+- `subjects`: List of subjects to include in the preprocessing, separated with comma.
+- `data_type`: [BIDS data type](https://bids-standard.github.io/bids-starter-kit/folders_and_files/folders.html#datatype), same as subfolder name in dataset structure. Typically, it should be "anat".
+- `contrast`: Contrast to preprocess.
+- "suffix_image": suffix for image data, after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`)
+– "suffix_label-SC_seg": suffix for binary images of the spinal cord mask, after subject ID but before file extension (e.g. `_rec-composed_T1w_label-SC_seg` in `sub-101_rec-composed_T1w_label-SC_seg.nii.gz`)
+- "suffix_label-disc": suffix for binary images of the intervertebral disks labeling, after subject id but before file extension (e.g. `_rec-composed_T1w_label-disc` in `sub-101_rec-composed_T1w_label-disc.nii.gz`)
+- 
 ### Segment spinal cord and vertebral discs
 
 Note that SCT functions treat your images with bright CSF as "T2w" (i.e. `t2` option) and dark CSF as "T1w" (i.e. `t1` option). You can therefore still use SCT even if your images are not actually T1w and T2w.
 
-#### Update `segment_sc_discs_deepseg.sh`
-  * Make sure to modify the suffix names for your T2w-like and T1w-like images (SUFFIX_T2w, SUFFIX_T1w) according to the naming convention in your dataset.
-  * If you do not have 2 types of images for each subject, make sure to comment out the appropriate code.
-
-#### Run script
+Run script:
 ```
-sct_run_batch -job 10 -path-data "/PATH/TO/dataset" -script segment_sc_discs_deepseg.sh -path-output "/PATH/TO/dataset/derivatives/labels"
+sct_run_batch -jobs 10 -path-data "/PATH/TO/dataset" -script segment_sc_discs_deepseg.sh -path-output "/PATH/TO/dataset/derivatives/labels"
 ```
 
 > **Note**
-> Replace values appropriately based on your setup
+> Replace values appropriately based on your setup (eg: -jobs 10 means that 10 CPU-cores are used. If you have 
 
 #### Quality control (QC)
 
@@ -99,15 +121,6 @@ sct_run_batch -job 10 -path-data "/PATH/TO/dataset" -script segment_sc_discs_dee
 * generating the initial template space, based on the average centerline and positions of intervertebral discs.
 * straightening of all subjects on the initial template space
 
-Here are the steps to go through:
-1. The template generation framework can be configured by the file "configuration.json", that includes the following variables:
-- `path_data`: absolute path to the dataset, including all images [correctly structured](#dataset-structure); ends with `/`.
-- `subjects`: List of subjects to include in the preprocessing, separated with comma.
-- `data_type`: [BIDS data type](https://bids-standard.github.io/bids-starter-kit/folders_and_files/folders.html#datatype), same as subfolder name in dataset structure.
-- `contrast`: Contrast to preprocess.
-- "suffix_image": suffix for image data, after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`)
-– "suffix_label-SC_seg": suffix for binary images of the spinal cord mask, after subject ID but before file extension (e.g. `_rec-composed_T1w_label-SC_seg` in `sub-101_rec-composed_T1w_label-SC_seg.nii.gz`)
-- "suffix_label-disc": suffix for binary images of the intervertebral disks labeling, after subject id but before file extension (e.g. `_rec-composed_T1w_label-disc` in `sub-101_rec-composed_T1w_label-disc.nii.gz`)
 2. Determine the integer value corresponding to the label of the lowest disc until which you want your template to go (depends on the lowest disc available in your images, nomenclature can be found [here](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling/labeling-conventions.html)).
 3. Run:
 ```
