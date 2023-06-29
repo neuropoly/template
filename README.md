@@ -94,8 +94,12 @@ Copy the file `configuration_default.json` and rename it as `configuration.json`
 - `contrast`: Contrast to be used by `sct_deepseg_sc` function.
 - `suffix_image`: Suffix for image data, after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`)
 – `suffix_label-SC_seg`: Suffix for binary images of the spinal cord mask, after `suffix_image` (e.g. `_label-SC_seg`).
-- "suffix_label-disc": suffix for binary images of the intervertebral disks labeling, after subject id but before file extension (e.g. `_rec-composed_T1w_label-disc` in `sub-101_rec-composed_T1w_label-disc.nii.gz`)
-- 
+- `suffix_label-disc`: Suffix for the images of the intervertebral discs labeling, after `suffix_image` (e.g. `_label-disc`).
+
+> **Note**
+> If you wish to make a template that does not align discs across subjects, please open an [issue](https://github.com/neuropoly/template/issues) and we will follow-up with you.
+
+
 ### Segment spinal cord and vertebral discs
 
 Note that SCT functions treat your images with bright CSF as "T2w" (i.e. `t2` option) and dark CSF as "T1w" (i.e. `t1` option). You can therefore still use SCT even if your images are not actually T1w and T2w.
