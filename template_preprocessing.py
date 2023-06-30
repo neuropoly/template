@@ -135,7 +135,7 @@ def read_dataset(fname_json = 'configuration.json', path_data = './'): ### TO CO
 
     return dataset_info
 
-def generate_centerline(dataset_info, lowest_disc = 25, contrast = 't1', regenerate = False, algo_fitting = 'linear', smooth = 50, degree = None, minmax = None):
+def generate_centerline(dataset_info, lowest_disc = 25, regenerate = False, algo_fitting = 'linear', smooth = 50, degree = None, minmax = None):
     """
     This function generates spinal cord centerline from binary images (either an image of centerline or segmentation)
     :param dataset_info: dictionary containing dataset information
@@ -409,7 +409,7 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
         points_average_centerline = points_average_centerline_template
     return points_average_centerline, position_template_discs
 
-def generate_initial_template_space(dataset_info, points_average_centerline, position_template_discs, contrast = 't1', algo_fitting = 'linear', smooth = 50, degree = None, minmax = None): ##DONE additional options in nb/generate_initial_template_space_branch
+def generate_initial_template_space(dataset_info, points_average_centerline, position_template_discs, algo_fitting = 'linear', smooth = 50, degree = None, minmax = None): ##DONE additional options in nb/generate_initial_template_space_branch
     """
     This function generates the initial template space, on which all images will be registered.
     :param points_average_centerline: list of points (x, y, z) of the average spinal cord and brainstem centerline
@@ -484,7 +484,7 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
     centerline_template.save_centerline(fname_output = path_template + 'template_label-centerline')
     print(f'\nSaving template centerline as .npz file (saves all Centerline object information, not just coordinates) as {path_template}template_label-centerline.npz\n')
 
-def straighten_all_subjects(dataset_info, normalized = False, contrast = 't1'): ### NOTE: outputs this to "BIDS" dir for this!
+def straighten_all_subjects(dataset_info, normalized = False): ### NOTE: outputs this to "BIDS" dir for this!
     """
     This function straighten all images based on template centerline
     :param dataset_info: dictionary containing dataset information
@@ -530,7 +530,7 @@ def straighten_all_subjects(dataset_info, normalized = False, contrast = 't1'): 
         tqdm_bar.update(1)
     tqdm_bar.close()
 
-def normalize_intensity_template(dataset_info, contrast = 't1', verbose = 1): ### Removed fname_template_centerline = None -> why would we want this?
+def normalize_intensity_template(dataset_info, verbose = 1): ### Removed fname_template_centerline = None -> why would we want this?
     """
     This function normalizes the intensity of the image inside the spinal cord
     :return:
@@ -642,7 +642,7 @@ def normalize_intensity_template(dataset_info, contrast = 't1', verbose = 1): ##
         # Save intensity normalized template
         image_new.save(fname_image_normalized)
 
-def copy_preprocessed_images(dataset_info, contrast = 't1'):
+def copy_preprocessed_images(dataset_info):
     contrast = dataset_info['contrast']
     list_subjects = dataset_info['subjects'].split(', ') 
     
@@ -654,7 +654,7 @@ def copy_preprocessed_images(dataset_info, contrast = 't1'):
         tqdm_bar.update(1)
     tqdm_bar.close()
 
-def create_mask_template(dataset_info, contrast = 't1'):
+def create_mask_template(dataset_info):
     path_template = dataset_info['path_data'] + 'derivatives/template/'
     subject_name = dataset_info['subjects'].split(', ')[0]
 
@@ -669,7 +669,7 @@ def create_mask_template(dataset_info, contrast = 't1'):
     os.system('nii2mnc ' + path_template + '/template_mask.nii.gz ' + ' ' + path_template + '/template_mask.mnc')
     return path_template + '/template_mask.mnc'
 
-def convert_data2mnc(dataset_info, contrast = 't1'):
+def convert_data2mnc(dataset_info):
     contrast = dataset_info['contrast']
     path_template = dataset_info['path_data'] + 'derivatives/template/'
     list_subjects = dataset_info['subjects'].split(', ')
