@@ -184,8 +184,6 @@ def generate_centerline(dataset_info, lowest_disc = 25, contrast = 't1', regener
         im_ctl.save(fname_centerline + '.nii.gz', dtype = 'float32')
         centerline = Centerline(points_x = arr_ctl[0], points_y = arr_ctl[1], points_z = arr_ctl[2], deriv_x = arr_ctl_der[0], deriv_y = arr_ctl_der[1], deriv_z = arr_ctl_der[2])
         centerline.compute_vertebral_distribution(coord_physical)
-        # save centerline .npz file
-        centerline.save_centerline(fname_output = fname_centerline)
 
         list_centerline.append(centerline)
         tqdm_bar.update(1)
