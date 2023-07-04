@@ -172,7 +172,7 @@ def generate_centerline(dataset_info, regenerate = False, algo_fitting = 'linear
 
             # extracting intervertebral discs
             im_discs = Image(fname_image_discs).change_orientation('RPI')
-            coord = im_discs.getNonZeroCoordinates(sorting = 'z') #, reverse_coord = True)
+            coord = im_discs.getNonZeroCoordinates(sorting = 'z')
             coord_physical = []
             for c in coord:
                 if c.value <= last_disc or c.value in [48, 49, 50, 51, 52]:
@@ -189,75 +189,6 @@ def generate_centerline(dataset_info, regenerate = False, algo_fitting = 'linear
             centerline.compute_vertebral_distribution(coord_physical)
             # save centerline .npz file
             centerline.save_centerline(fname_output = fname_centerline)
-
-            print(f'Centerline.regions_labels: {Centerline.regions_labels}\n')
-            print(f'Centerline.labels_regions: {Centerline.labels_regions}\n')
-
-            ###### TESTS ######
-            # from operator import itemgetter
-            # label_reference = 'C1'
-            # discs_levels = coord_physical
-            # print(f'centerline.number_of_points: {centerline.number_of_points}\n')
-            # progress_length = np.zeros(centerline.number_of_points)
-            # for i in range(centerline.number_of_points - 1):
-            #     # print(f'{i}: progressive_length = {centerline.progressive_length[i]}\nprogress_length = {progress_length[i] + centerline.progressive_length[i]}\n\n')
-            #     progress_length[i + 1] = progress_length[i] + centerline.progressive_length[i]
-            # centerline.label_reference = label_reference
-            # print(f'centerline.label_reference: {centerline.label_reference}\n')
-            # # special case for C2, which might not be present because it is difficult to identify
-            # is_C2_here = False
-            # C1, C3 = None, None
-            # for level in discs_levels:
-            #     if level[3] == 2:
-            #         is_C2_here = True
-            #     elif level[3] == 1:
-            #         C1 = level
-            #     elif level[3] == 3:
-            #         C3 = level
-            # if not is_C2_here and C1 is not None and C3 is not None:
-            #     discs_levels.append([(C1[0] + C3[0]) / 2.0, (C1[1] + C3[1]) / 2.0, (C1[2] + C3[2]) / 2.0, 2])
-
-            # centerline.l_points = [0] * centerline.number_of_points
-            # centerline.dist_points = [0] * centerline.number_of_points
-            # centerline.dist_points_rel = [0] * centerline.number_of_points
-            # centerline.index_disc, index_disc_inv = {}, []
-
-            # # extracting each level based on position and computing its nearest point along the centerline
-            # index_first_label, index_last_label = None, None
-            # for level in discs_levels:
-            #     if level[3] in centerline.list_labels:
-            #         coord_level = [level[0], level[1], level[2]]
-            #         disc = centerline.Centerline.regions_labels[int(level[3])]
-            #         nearest_index = centerline.find_nearest_index(coord_level)
-            #         centerline.index_disc[disc] = nearest_index
-            #         index_disc_inv.append([nearest_index, disc])
-
-            #         # Finding minimum and maximum label, based on list_labels, which is ordered from top to bottom.
-            #         index_label = centerline.list_labels.index(int(level[3]))
-            #         if index_first_label is None or index_label < index_first_label:
-            #             index_first_label = index_label
-            #         if index_last_label is None or index_label > index_last_label:
-            #             index_last_label = index_label
-
-            # if index_first_label is not None:
-            #     centerline.first_label = centerline.list_labels[index_first_label]
-            # if index_last_label is not None:
-            #     centerline.last_label = centerline.list_labels[index_last_label]
-
-            # index_disc_inv.append([0, 'bottom'])
-            # index_disc_inv.sort(key=itemgetter(0))
-
-            # print(f'centerline.index_disc: {centerline.index_disc}\n')
-            
-            # if self.label_reference not in self.index_disc:
-            #     upper = 31
-            #     label_reference = ''
-            #     for label in self.index_disc:
-            #         if self.Centerline.labels_regions[label] < upper:
-            #             label_reference = label
-            #             upper = self.Centerline.labels_regions[label]
-            #     self.label_reference = label_reference
-            ###### TESTS ######
 
         list_centerline.append(centerline)
         tqdm_bar.update(1)
