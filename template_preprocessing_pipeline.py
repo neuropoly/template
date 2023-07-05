@@ -1,6 +1,5 @@
 """
 This script calls all the methods required for the data preprocessing.
-The default dataset is an example dataset that is downloaded at the beginning of the script.
 """
 
 from template_preprocessing import *
@@ -9,13 +8,15 @@ import sys
 dataset_info = read_dataset(sys.argv[1])
 
 # generating centerlines
-list_centerline = generate_centerline(dataset_info = dataset_info, regenerate = True) 
+list_centerline = generate_centerline(dataset_info = dataset_info, regenerate = False) 
 
 # computing average template centerline and vertebral distribution
 points_average_centerline, position_template_discs = average_centerline(list_centerline = list_centerline,
 	dataset_info = dataset_info,
 	use_ICBM152 = False,
-	use_label_ref = 'C1')
+	use_label_ref = 'C1',
+	#lowest_disc = int(sys.argv[2])
+    )
 
 # generating the initial template space
 generate_initial_template_space(dataset_info = dataset_info,
@@ -33,3 +34,4 @@ copy_preprocessed_images(dataset_info = dataset_info)
 
 # converting results to Minc format
 convert_data2mnc(dataset_info)
+
