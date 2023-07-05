@@ -75,7 +75,7 @@ TODO: remove detials below
 
 ### Install SCT
 
-SCT is used for all preprocessing steps. The current version of the pipeline uses SCT development version (commit `7ead83200d7ad9ee5e0d112e77a1d7b894add738`) as we prepare for the release of SCT 6.0.
+SCT is used for all preprocessing steps. The current version of the pipeline uses SCT development version (commit `e740edf4c8408ffa44ef7ba23ad068c6d07e4b87`) as we prepare for the release of SCT 6.0.
 
 Once SCT is installed, make sure to activate SCT's virtual environment because the pipeline will use SCT's API functions.
 
