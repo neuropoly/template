@@ -138,7 +138,6 @@ def generate_centerline(dataset_info, regenerate = False, algo_fitting = 'linear
     """
     This function generates spinal cord centerline from binary images (either an image of centerline or segmentation)
     :param dataset_info: dictionary containing dataset information
-    :param contrast: {'t1', 't2'}
     :return list of centerline objects
     """
     path_data = dataset_info['path_data']
@@ -173,14 +172,13 @@ def generate_centerline(dataset_info, regenerate = False, algo_fitting = 'linear
             # extracting intervertebral discs
             im_discs = Image(fname_image_discs).change_orientation('RPI')
             coord = im_discs.getNonZeroCoordinates(sorting = 'z', reverse_coord = True)
-            coord_physical = []
-            coord_pix = [] ############
+            coord_pix = [] # coord_physical = []
             for c in coord:
-                if c.value <= last_disc or c.value in [48, 49, 50, 51, 52]:
-                    c_p = list(im_discs.transfo_pix2phys([[c.x, c.y, c.z]])[0])
-                    c_p.append(c.value)
-                    coord_physical.append(c_p)
-                    coord_pix.append(list(c)) ############
+                if c.value <= (last_disc + 1) or c.value in [48, 49, 50, 51, 52]:
+                    # c_p = list(im_discs.transfo_pix2phys([[c.x, c.y, c.z]])[0])
+                    # c_p.append(c.value)
+                    # coord_physical.append(c_p)
+                    coord_pix.append(list(c))
 
             # extracting centerline
             im_ctl, arr_ctl, arr_ctl_der, _ = get_centerline(im_seg, param = param_centerline)
@@ -193,53 +191,6 @@ def generate_centerline(dataset_info, regenerate = False, algo_fitting = 'linear
             
             # save centerline .npz file
             centerline.save_centerline(fname_output = fname_centerline)
-
-            #################################### TESTS
-            # label_reference = 'C1'
-            # discs_levels = coord_physical
-            # centerline.discs_levels = discs_levels
-            # centerline.label_reference = label_reference
-
-            # # special case for C2, which might not be present because it is difficult to identify
-            # is_C2_here = False
-            # C1, C3 = None, None
-            # for level in discs_levels:
-            #     if level[3] == 2:
-            #         is_C2_here = True
-            #     elif level[3] == 1:
-            #         C1 = level
-            #     elif level[3] == 3:
-            #         C3 = level
-            # if not is_C2_here and C1 is not None and C3 is not None:
-            #     discs_levels.append([(C1[0] + C3[0]) / 2.0, (C1[1] + C3[1]) / 2.0, (C1[2] + C3[2]) / 2.0, 2])
-            
-            # centerline.l_points = [0] * centerline.number_of_points
-            # centerline.dist_points = [0] * centerline.number_of_points
-            # centerline.dist_points_rel = [0] * centerline.number_of_points
-            # centerline.index_disc, index_disc_inv = {}, []
-
-            # # extracting each level based on position and computing its nearest point along the centerline
-            # index_first_label, index_last_label = None, None
-            # for level in discs_levels:
-            #     if level[3] in centerline.list_labels:
-            #         coord_level = [level[0], level[1], level[2]]
-            #         print(f'\ncoord_level: {coord_level}')
-            #         disc = centerline.regions_labels[int(level[3])]
-            #         print(f'\ndisc: {disc}')
-            #         nearest_index = centerline.find_nearest_index(coord_level)
-            #         print(f'\nnearest_index: {nearest_index}\n')
-            #         centerline.index_disc[disc] = nearest_index
-            #         index_disc_inv.append([nearest_index, disc])
-
-            #         # Finding minimum and maximum label, based on list_labels, which is ordered from top to bottom.
-            #         index_label = centerline.list_labels.index(int(level[3]))
-            #         if index_first_label is None or index_label < index_first_label:
-            #             index_first_label = index_label
-            #         if index_last_label is None or index_label > index_last_label:
-            #             index_last_label = index_label
-            print(f'\n\ncenterline.index_disc: {centerline.index_disc}\n')
-            print(f'centerline.distance_from_C1label: {centerline.distance_from_C1label}')
-            # #################################### TESTS
 
         list_centerline.append(centerline)
         tqdm_bar.update(1)
@@ -283,13 +234,11 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
     final template space.
     :param list_centerline: list of Centerline objects, for all subjects
     :param dataset_info: dictionary containing dataset information
-    :param lowest_disc_quantile: quantile in the distribution of lowest disc labels across subjects (will be used to determine 
-        lowest disc label in the template)
     :return: points_average_centerline: list of points (x, y, z) of the average spinal cord and brainstem centerline
         position_template_discs: index of intervertebral discs along the template centerline
     """
 
-    first_disc = int(dataset_info['first_disc'])
+    # first_disc = int(dataset_info['first_disc'])
     last_disc = int(dataset_info['last_disc'])
 
     # extracting centerline from ICBM152
@@ -303,23 +252,20 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
     new_vert_length = {}
     for dist_discs in list_dist_discs:
         for i, disc_label in enumerate(dist_discs):
-            if (i + 1) >= first_disc and (i + 1) <= last_disc:
+            if (i + 1) <= last_disc: # and (i + 1) >= first_disc 
                 if disc_label == 'PMJ':
                     length = abs(dist_discs[disc_label] - dist_discs['PMG'])
                 elif disc_label == 'PMG':
                     length = abs(dist_discs[disc_label] - dist_discs['C1'])
                 else:
                     index_current_label = list_labels.index(Centerline.labels_regions[disc_label])
-                    next_label = Centerline.regions_labels[str(list_labels[index_current_label + 1])]
+                    next_label = Centerline.regions_labels[list_labels[index_current_label + 1]]
                     if next_label in dist_discs:
                         length = abs(dist_discs[disc_label] - dist_discs[next_label])
                         if disc_label in new_vert_length:
                             new_vert_length[disc_label].append(length)
                         else:
                             new_vert_length[disc_label] = [length]
-                        print(f'next_label: {next_label}\n')
-                        print(f'disc_label: {disc_label}\n')
-                        print(f'length: {length}\n\n')
     new_average_vert_length = {}
     for disc_label in new_vert_length: new_average_vert_length[disc_label] = np.mean(new_vert_length[disc_label])
 
@@ -334,7 +280,7 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
                     length = abs(dist_discs[disc_label] - dist_discs['C1'])
                 else:
                     index_current_label = list_labels.index(Centerline.labels_regions[disc_label])
-                    next_label = Centerline.regions_labels[str(list_labels[index_current_label + 1])]
+                    next_label = Centerline.regions_labels[list_labels[index_current_label + 1]]
                     if next_label in dist_discs:
                         length = abs(dist_discs[disc_label] - dist_discs[next_label])
                     else:
@@ -345,7 +291,6 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
                 length_vertebral_levels[disc_label].append(length)
             else:
                 length_vertebral_levels[disc_label] = [length]
-    
     # averaging the length of vertebral levels
     average_length = {}
     for disc_label in length_vertebral_levels:
@@ -360,8 +305,8 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
         if 'PMJ' in average_length:
             distances_discs_from_C1['PMJ'] = -average_length['PMG'][1] - average_length['PMJ'][1]
     for disc_number in list_labels:
-        if disc_number not in [50, 49, 1] and Centerline.regions_labels[str(disc_number)] in average_length:
-            distances_discs_from_C1[Centerline.regions_labels[str(disc_number)]] = distances_discs_from_C1[Centerline.regions_labels[str(disc_number - 1)]] + average_length[Centerline.regions_labels[str(disc_number)]][1]
+        if disc_number not in [50, 49, 1] and Centerline.regions_labels[disc_number] in average_length:
+            distances_discs_from_C1[Centerline.regions_labels[disc_number]] = distances_discs_from_C1[Centerline.regions_labels[disc_number - 1]] + average_length[Centerline.regions_labels[disc_number]][1]
 
     # calculating discs average distances from C1
     average_distances = []
@@ -451,7 +396,7 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
 
             if i >= index_straight:
                 index_current_label = list_labels.index(Centerline.labels_regions[current_label])
-                next_label = Centerline.regions_labels[str(list_labels[index_current_label + 1])]
+                next_label = Centerline.regions_labels[list_labels[index_current_label + 1]]
                 if next_label not in average_positions_from_C1:
                     temp_point[2] = coord_ref[2] - average_positions_from_C1[current_label] - relative_position_from_disc * length_current_label
                 else:
