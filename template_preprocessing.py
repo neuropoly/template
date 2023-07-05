@@ -172,13 +172,15 @@ def generate_centerline(dataset_info, regenerate = False, algo_fitting = 'linear
 
             # extracting intervertebral discs
             im_discs = Image(fname_image_discs).change_orientation('RPI')
-            coord = im_discs.getNonZeroCoordinates(sorting = 'z')
+            coord = im_discs.getNonZeroCoordinates(sorting = 'z', reverse_coord = True)
             coord_physical = []
+            coord_pix = [] ############
             for c in coord:
                 if c.value <= last_disc or c.value in [48, 49, 50, 51, 52]:
                     c_p = list(im_discs.transfo_pix2phys([[c.x, c.y, c.z]])[0])
                     c_p.append(c.value)
                     coord_physical.append(c_p)
+                    coord_pix.append(list(c)) ############
 
             # extracting centerline
             im_ctl, arr_ctl, arr_ctl_der, _ = get_centerline(im_seg, param = param_centerline)
@@ -186,9 +188,58 @@ def generate_centerline(dataset_info, regenerate = False, algo_fitting = 'linear
             # save centerline as .nii.gz file
             im_ctl.save(fname_centerline + '.nii.gz', dtype = 'float32')
             centerline = Centerline(points_x = arr_ctl[0], points_y = arr_ctl[1], points_z = arr_ctl[2], deriv_x = arr_ctl_der[0], deriv_y = arr_ctl_der[1], deriv_z = arr_ctl_der[2])
-            centerline.compute_vertebral_distribution(coord_physical)
+            centerline.compute_vertebral_distribution(coord_pix)
+            #centerline.compute_vertebral_distribution(coord_physical)
+            
             # save centerline .npz file
             centerline.save_centerline(fname_output = fname_centerline)
+
+            #################################### TESTS
+            # label_reference = 'C1'
+            # discs_levels = coord_physical
+            # centerline.discs_levels = discs_levels
+            # centerline.label_reference = label_reference
+
+            # # special case for C2, which might not be present because it is difficult to identify
+            # is_C2_here = False
+            # C1, C3 = None, None
+            # for level in discs_levels:
+            #     if level[3] == 2:
+            #         is_C2_here = True
+            #     elif level[3] == 1:
+            #         C1 = level
+            #     elif level[3] == 3:
+            #         C3 = level
+            # if not is_C2_here and C1 is not None and C3 is not None:
+            #     discs_levels.append([(C1[0] + C3[0]) / 2.0, (C1[1] + C3[1]) / 2.0, (C1[2] + C3[2]) / 2.0, 2])
+            
+            # centerline.l_points = [0] * centerline.number_of_points
+            # centerline.dist_points = [0] * centerline.number_of_points
+            # centerline.dist_points_rel = [0] * centerline.number_of_points
+            # centerline.index_disc, index_disc_inv = {}, []
+
+            # # extracting each level based on position and computing its nearest point along the centerline
+            # index_first_label, index_last_label = None, None
+            # for level in discs_levels:
+            #     if level[3] in centerline.list_labels:
+            #         coord_level = [level[0], level[1], level[2]]
+            #         print(f'\ncoord_level: {coord_level}')
+            #         disc = centerline.regions_labels[int(level[3])]
+            #         print(f'\ndisc: {disc}')
+            #         nearest_index = centerline.find_nearest_index(coord_level)
+            #         print(f'\nnearest_index: {nearest_index}\n')
+            #         centerline.index_disc[disc] = nearest_index
+            #         index_disc_inv.append([nearest_index, disc])
+
+            #         # Finding minimum and maximum label, based on list_labels, which is ordered from top to bottom.
+            #         index_label = centerline.list_labels.index(int(level[3]))
+            #         if index_first_label is None or index_label < index_first_label:
+            #             index_first_label = index_label
+            #         if index_last_label is None or index_label > index_last_label:
+            #             index_last_label = index_label
+            print(f'\n\ncenterline.index_disc: {centerline.index_disc}\n')
+            print(f'centerline.distance_from_C1label: {centerline.distance_from_C1label}')
+            # #################################### TESTS
 
         list_centerline.append(centerline)
         tqdm_bar.update(1)
