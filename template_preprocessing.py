@@ -264,7 +264,6 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
                     else:
                         length = average_vert_length[disc_label]
             else: length = average_vert_length[disc_label]
-
             if disc_label in length_vertebral_levels:
                 length_vertebral_levels[disc_label].append(length)
             else:
@@ -303,18 +302,18 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
     disc_position_in_centerline = {}
 
     # iterate over each disc level
-    for i in range(len(average_distances)): ###### C1, C2, C3, C4, ...
+    for i in range(len(average_distances)):
         disc_label = average_distances[i][0]
         average_positions_from_C1[disc_label] = average_distances[i][1]
 
-        for j in range(number_of_points_between_levels): ###### C1: {0, 1, 2, 3, ...}
-            relative_position = float(j) / float(number_of_points_between_levels) ###### C1: {0/100, 1/100, 2/100, 3/100, ...}
+        for j in range(number_of_points_between_levels):
+            relative_position = float(j) / float(number_of_points_between_levels)
             if disc_label in ['PMJ', 'PMG']:
                 relative_position = 1.0 - relative_position
             list_coordinates = [[]] * len(list_centerline)
-            for k, centerline in enumerate(list_centerline): ###### iterate through each centerline and get actual absolute coordinate
-                #if disc_label in centerline.distance_from_C1label:
-               list_coordinates[k] = centerline.get_closest_to_relative_position(disc_label, relative_position) ### centerline.get_coordinate_interpolated(disc_label, relative_position)
+            for k, centerline in enumerate(list_centerline):
+                # if disc_label in centerline.distance_from_C1label:
+               list_coordinates[k] = centerline.get_closest_to_relative_position(disc_label, relative_position) # centerline.get_coordinate_interpolated(disc_label, relative_position)
             # average all coordinates
             get_avg = []
             for item in list_coordinates: 
@@ -390,7 +389,7 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
         points_average_centerline = points_average_centerline_template
     return points_average_centerline, position_template_discs
 
-def generate_initial_template_space(dataset_info, points_average_centerline, position_template_discs, algo_fitting = 'linear', smooth = 50, degree = None, minmax = None): ##DONE additional options in nb/generate_initial_template_space_branch
+def generate_initial_template_space(dataset_info, points_average_centerline, position_template_discs, algo_fitting = 'linear', smooth = 50, degree = None, minmax = None):
     """
     This function generates the initial template space, on which all images will be registered.
     :param points_average_centerline: list of points (x, y, z) of the average spinal cord and brainstem centerline
@@ -464,14 +463,12 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
     centerline_template.save_centerline(fname_output = path_template + 'template_label-centerline')
     print(f'\nSaving template centerline as .npz file (saves all Centerline object information, not just coordinates) as {path_template}template_label-centerline.npz\n')
 
-def straighten_all_subjects(dataset_info, normalized = False, contrast = 't1'): ### NOTE: outputs this to "BIDS" dir for this!
+def straighten_all_subjects(dataset_info, normalized = False):
     """
     This function straighten all images based on template centerline
     :param dataset_info: dictionary containing dataset information
     :param normalized: True if images were normalized before straightening
-    :param contrast: {'t1', 't2'}
     """
-    contrast = dataset_info['contrast']
     path_data = dataset_info['path_data']
     path_template = dataset_info['path_data'] + 'derivatives/template/'
     list_subjects = dataset_info['subjects'].split(', ')
@@ -485,10 +482,9 @@ def straighten_all_subjects(dataset_info, normalized = False, contrast = 't1'): 
         if not os.path.exists(folder_out): os.makedirs(folder_out)
         
         fname_image = path_data + subject_name + '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '.nii.gz'
-        fname_image_seg = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_label-SC_seg'] + '.nii.gz'
-        fname_discs = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_label-disc']
-        fname_image_discs = fname_discs + '-manual.nii.gz' if os.path.isfile(fname_discs + '-manual.nii.gz') else fname_discs + '.nii.gz'
-        fname_image_centerline = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-centerline.nii.gz'
+        fname_image_seg = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-SC_seg.nii.gz'
+        fname_image_discs = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-disc.nii.gz'
+        fname_image_centerline =  path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-centerline.nii.gz'
         fname_out = subject_name + dataset_info['suffix_image'] + '_straight_norm.nii.gz' if normalized else subject_name + dataset_info['suffix_image'] + '_straight.nii.gz' 
 
         fname_input_seg = fname_image_seg if os.path.isfile(fname_image_seg) else fname_image_centerline
