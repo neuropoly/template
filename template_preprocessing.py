@@ -30,15 +30,6 @@ regions_labels = {'50': 'PMJ', '49': 'PMG',
                   '20': 'L1', '21': 'L2', '22': 'L3', '23': 'L4', '24': 'L5',
                   '25': 'S1', '26': 'S2', '27': 'S3', '28': 'S4', '29': 'S5',
                   '30': 'Co'}
-average_vert_length = {'PMJ': 30.0, 'PMG': 15.0, 'C1': 0.0,
-                       'C2': 20.176514191661337, 'C3': 17.022090519403065, 'C4': 17.842111671016056,
-                       'C5': 16.800356992319429, 'C6': 16.019212889311383, 'C7': 15.715854192723905,
-                       'T1': 16.84466163681078, 'T2': 19.865049296865475, 'T3': 21.550165130933905,
-                       'T4': 21.761237991438083, 'T5': 22.633281372803687, 'T6': 23.801974227738132,
-                       'T7': 24.358357813758332, 'T8': 25.200266294477885, 'T9': 25.315272064638506,
-                       'T10': 25.501856729317133, 'T11': 27.619238824308123, 'T12': 29.465119270009946,
-                       'L1': 31.89272719870084, 'L2': 33.511890474486449, 'L3': 35.721413718617441}
-
 
 def average_coordinates_over_slices(self, image): ### deprecated from latest version of spinalcordtoolbox
     # extracting points information for each coordinates
@@ -263,8 +254,8 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
                             new_vert_length[disc_label].append(length)
                         else:
                             new_vert_length[disc_label] = [length]
-    new_average_vert_length = {}
-    for disc_label in new_vert_length: new_average_vert_length[disc_label] = np.mean(new_vert_length[disc_label])
+    average_vert_length = {}
+    for disc_label in new_vert_length: average_vert_length[disc_label] = np.mean(new_vert_length[disc_label])
 
     # computing length of each vertebral level
     length_vertebral_levels = {}
@@ -281,8 +272,8 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
                     if next_label in dist_discs:
                         length = abs(dist_discs[disc_label] - dist_discs[next_label])
                     else:
-                        length = new_average_vert_length[disc_label]
-            else: length = new_average_vert_length[disc_label]
+                        length = average_vert_length[disc_label]
+            else: length = average_vert_length[disc_label]
 
             if disc_label in length_vertebral_levels:
                 length_vertebral_levels[disc_label].append(length)
