@@ -1,7 +1,7 @@
 {
 	"path_data": "/path/to/data/",
 	"subjects": "sub-001, sub-002, sub-003",
-	"data_type":"anat",
+	"data_type": "anat",
 	"contrast": "t1",
 	"suffix_image": "_T1w",
 	"first_disc": "1",
