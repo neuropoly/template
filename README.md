@@ -92,9 +92,9 @@ Copy the file `configuration_default.json` and rename it as `configuration.json`
 - `subjects`: List of subjects to include in the preprocessing, separated with comma.
 - `data_type`: [BIDS data type](https://bids-standard.github.io/bids-starter-kit/folders_and_files/folders.html#datatype), same as subfolder name in dataset structure. Typically, it should be "anat".
 - `contrast`: Contrast to be used by `sct_deepseg_sc` function.
-- `suffix_image`: Suffix for image data, after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`)
-– `suffix_label-SC_seg`: Suffix for binary images of the spinal cord mask, after `suffix_image` (e.g. `_label-SC_seg`).
-- `suffix_label-disc`: Suffix for the images of the intervertebral discs labeling, after `suffix_image` (e.g. `_label-disc`).
+- `suffix_image`: Suffix for image data, after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`).
+- `first_disc`: Integer value corresponding to the label of the first vertebral disc you want present in the template (see [spinalcordtoolbox labeling conventions](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling/labeling-conventions.html)).
+- `last_disc`: Integer value corresponding to the label of the last vertebral disc you want present in the template.
 
 > **Note**
 > Note that SCT functions treat your images with bright CSF as "T2w" (i.e. `t2` option) and dark CSF as "T1w" (i.e. `t1` option). You can therefore still use SCT even if your images are not actually T1w and T2w.
@@ -107,7 +107,7 @@ Copy the file `configuration_default.json` and rename it as `configuration.json`
 
 Run script:
 ```
-sct_run_batch -jobs 10 -path-data "/PATH/TO/dataset" -script segment_sc_discs_deepseg.sh -path-output "/PATH/TO/results"
+sct_run_batch -jobs 10 -path-data "/PATH/TO/dataset" -script preprocess_label.sh  -path-output "/PATH/TO/results"
 ```
 
 > **Note**
@@ -122,7 +122,7 @@ sct_run_batch -jobs 10 -path-data "/PATH/TO/dataset" -script segment_sc_discs_de
 
 ### Normalize spinal cord across subjects
 
-`template_preprocessing_pipeline.py` contains several functions to normalize the spinal cord across subjects, in preparation for template generation. More specifically:
+`preprocess_normalize.py` contains several functions to normalize the spinal cord across subjects, in preparation for template generation. More specifically:
 * Extracting the spinal cord centerline and compute the vertebral distribution along the spinal cord, for all subjects,
 * Computing the average centerline, by averaging the position of each intervertebral discs. The average centerline of the spinal cord is straightened,
 * Generating the initial template space, based on the average centerline and positions of intervertebral discs,
@@ -132,7 +132,7 @@ sct_run_batch -jobs 10 -path-data "/PATH/TO/dataset" -script segment_sc_discs_de
 
 3. Run:
 ```
-python template_preprocessing_pipeline.py configuration.json LOWEST_DISC
+python preprocess_normalize.py configuration.json
 ```
 
 4. One the preprocessing is performed, please check your data. The preprocessing results should be a series of straight images registered in the same space, with all the vertebral levels aligned with each others.
