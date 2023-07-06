@@ -107,11 +107,12 @@ Copy the file `configuration_default.json` and rename it as `configuration.json`
 
 Run script:
 ```
-sct_run_batch -jobs 10 -path-data "/PATH/TO/dataset" -script preprocess_label.sh  -path-output "/PATH/TO/results"
+sct_run_batch -jobs 6 -path-data "/PATH/TO/dataset" -script preprocess_segment.sh -path-output "/PATH/TO/results"
 ```
 
 > **Note**
-> Replace values appropriately based on your setup (eg: -jobs 10 means that 10 CPU-cores are used. For more details, run `sct_run_batch -h`).
+> Replace values appropriately based on your setup (eg: -jobs 6 means that 10 CPU-cores are used. For more details, run `sct_run_batch -h`).
+> If you wish to exclude subjects, add flag "-exclude-list". Example: `-exclude-list sub-107 sub-125`
 
 
 ### Quality control (QC)
