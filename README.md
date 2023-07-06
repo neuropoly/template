@@ -69,15 +69,15 @@ dataset/
 ```
 
 
-## 1. Data preprocessing
+## Step 1. Data preprocessing
 
-This pipeline includes the following steps:
-
-TODO: remove detials below
-1. Segmentation of SC and disc labeling
-2. QC. If seg didn't work, fix SC seg. If disc labeling did not work, fix labeling.
-3. `configuration_default.json`: Copy this file and rename it as `configuration.json`. Edit it and modify according to your setup.
-4. Extraction of SC centerline, generation of average centerline in the template space, straightening/registration of all spinal cord images on the initial template space. 
+This pipeline includes the following steps:\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**1.1** Install SCT;\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**1.2** Edit configuration file;\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**1.3** Segment spinal cord and vertebral discs;\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**1.4** Quality control (QC) labels;\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**1.5** Normalize spinal cord across subjects;\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**1.6** Quality control (QC) spinal cord normalization across subjects.
 
 ### 1.1 Install SCT
 
@@ -143,7 +143,7 @@ python preprocess_normalize.py configuration.json
 One the preprocessing is performed, please check your data. The preprocessing results should be a series of straight images registered in the same space, with all the vertebral levels aligned with each others.
 
 
-## 2. Template creation
+## Step 2. Template creation
 
 ### Dependencies for template generation (see [dependencies](#dependencies_anchor))
 - [ANIMAL registration framework, part of the IPL longitudinal pipeline](https://github.com/vfonov/nist_mni_pipelines)
