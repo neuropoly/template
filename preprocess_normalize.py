@@ -15,9 +15,6 @@ from spinalcordtoolbox.centerline.core import get_centerline
 from spinalcordtoolbox.image import Image
 from spinalcordtoolbox.download import download_data, unzip
 
-list_labels = [50, 49, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
-               27, 28, 29, 30]
-
 def average_coordinates_over_slices(self, image): ### deprecated from latest version of spinalcordtoolbox
     # extracting points information for each coordinates
     P_x = np.array([point[0] for point in self.points])
@@ -232,8 +229,8 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
                 elif disc_label == 'PMG':
                     length = abs(dist_discs[disc_label] - dist_discs['C1'])
                 else:
-                    index_current_label = list_labels.index(Centerline.labels_regions[disc_label])
-                    next_label = Centerline.regions_labels[list_labels[index_current_label + 1]]
+                    index_current_label = Centerline.potential_list_labels.index(Centerline.labels_regions[disc_label])
+                    next_label = Centerline.regions_labels[Centerline.potential_list_labels[index_current_label + 1]]
                     if next_label in dist_discs:
                         length = abs(dist_discs[disc_label] - dist_discs[next_label])
                         if disc_label in new_vert_length:
@@ -253,8 +250,8 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
                 elif disc_label == 'PMG':
                     length = abs(dist_discs[disc_label] - dist_discs['C1'])
                 else:
-                    index_current_label = list_labels.index(Centerline.labels_regions[disc_label])
-                    next_label = Centerline.regions_labels[list_labels[index_current_label + 1]]
+                    index_current_label = Centerline.potential_list_labels.index(Centerline.labels_regions[disc_label])
+                    next_label = Centerline.regions_labels[Centerline.potential_list_labels[index_current_label + 1]]
                     if next_label in dist_discs:
                         length = abs(dist_discs[disc_label] - dist_discs[next_label])
                     else:
@@ -279,7 +276,7 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
         distances_discs_from_C1['PMG'] = -average_length['PMG'][1]
         if 'PMJ' in average_length:
             distances_discs_from_C1['PMJ'] = -average_length['PMG'][1] - average_length['PMJ'][1]
-    for disc_number in list_labels:
+    for disc_number in Centerline.potential_list_labels:
         if disc_number not in [50, 49, 1] and Centerline.regions_labels[disc_number] in average_length:
             distances_discs_from_C1[Centerline.regions_labels[disc_number]] = distances_discs_from_C1[Centerline.regions_labels[disc_number - 1]] + average_length[Centerline.regions_labels[disc_number]][1]
 
@@ -370,8 +367,8 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
             temp_point = np.copy(coord_ref)
 
             if i >= index_straight:
-                index_current_label = list_labels.index(Centerline.labels_regions[current_label])
-                next_label = Centerline.regions_labels[list_labels[index_current_label + 1]]
+                index_current_label = Centerline.potential_list_labels.index(Centerline.labels_regions[current_label])
+                next_label = Centerline.regions_labels[Centerline.potential_list_labels[index_current_label + 1]]
                 if next_label not in average_positions_from_C1:
                     temp_point[2] = coord_ref[2] - average_positions_from_C1[current_label] - relative_position_from_disc * length_current_label
                 else:
