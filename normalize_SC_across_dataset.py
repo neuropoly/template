@@ -5,6 +5,7 @@ import numpy as np
 import csv
 from copy import copy
 from tqdm import tqdm
+import sys
 
 from spinalcordtoolbox import utils as sct 
 from spinalcordtoolbox.types import Centerline
@@ -116,7 +117,6 @@ def generate_centerline(dataset_info, regenerate = False, algo_fitting = 'linear
     """
     This function generates spinal cord centerline from binary images (either an image of centerline or segmentation)
     :param dataset_info: dictionary containing dataset information
-    :param contrast: {'t1', 't2'}
     :return list of centerline objects
     """
     path_data = dataset_info['path_data']
@@ -461,12 +461,11 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
     centerline_template.save_centerline(fname_output = path_template + 'template_label-centerline')
     print(f'\nSaving template centerline as .npz file (saves all Centerline object information, not just coordinates) as {path_template}template_label-centerline.npz\n')
 
-def straighten_all_subjects(dataset_info, normalized = False): ### NOTE: outputs this to "BIDS" dir for this!
+def straighten_all_subjects(dataset_info, normalized = False):
     """
     This function straighten all images based on template centerline
     :param dataset_info: dictionary containing dataset information
     :param normalized: True if images were normalized before straightening
-    :param contrast: {'t1', 't2'}
     """
     path_data = dataset_info['path_data']
     path_template = dataset_info['path_data'] + 'derivatives/template/'
@@ -670,3 +669,42 @@ def convert_data2mnc(dataset_info):
 
     output_list.close()
 
+# main
+# =======================================================================================================================
+def main(configuration_file):
+    """
+    Pipeline for data processing.
+    """
+    dataset_info = read_dataset(configuration_file)
+
+    # generating centerlines
+    list_centerline = generate_centerline(dataset_info = dataset_info, regenerate = False) 
+
+    # computing average template centerline and vertebral distribution
+    points_average_centerline, position_template_discs = average_centerline(list_centerline = list_centerline,
+        dataset_info = dataset_info,
+        use_ICBM152 = False,
+        use_label_ref = 'C1')
+
+    # generating the initial template space
+    generate_initial_template_space(dataset_info = dataset_info,
+        points_average_centerline = points_average_centerline,
+        position_template_discs = position_template_discs)
+
+    # straightening of all spinal cord
+    straighten_all_subjects(dataset_info = dataset_info)
+
+    # normalize image intensity inside the spinal cord
+    normalize_intensity_template(dataset_info = dataset_info)
+
+    # copy preprocessed dataset in template folder
+    copy_preprocessed_images(dataset_info = dataset_info)
+
+    # converting results to Minc format
+    convert_data2mnc(dataset_info)
+
+# =======================================================================================================================
+# Start program
+# =======================================================================================================================
+if __name__ == "__main__":
+    main(sys.argv[1])
