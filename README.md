@@ -112,7 +112,8 @@ Copy the file `configuration_default.json` and rename it as `configuration.json`
 
 Run script:
 ```
-sct_run_batch -jobs 6 -path-data "/PATH/TO/dataset" -script preprocess_segment.sh -path-output "/PATH/TO/results"
+# sct_run_batch -jobs 6 -path-data "path_data" -script preprocess_segment.sh -path-output "path_data/derivatives/labels"
+sct_run_batch -config configuration.json -script preprocess_segment.sh 
 ```
 
 > **Note**
