@@ -33,10 +33,10 @@ json_data=$(cat "$json_file")
 # ======================================================================================================================
 
 SUBJECT=$1
-PATH_DATA=$(echo "$json_data" | sed -n 's/.*"path_data": "\(.*\)".*/\1/p') # $(echo "$parsed_data" | jq -r '.path_data')
-DATA_TYPE=$(echo "$json_data" | sed -n 's/.*"data_type": "\(.*\)".*/\1/p') #$(echo "$parsed_data" | jq -r '.data_type')
-IMAGE_SUFFIX=$(echo "$json_data" | sed -n 's/.*"suffix_image": "\(.*\)".*/\1/p') #$(echo "$parsed_data" | jq -r '.suffix_image')
-CONTRAST=$(echo "$json_data" | sed -n 's/.*"contrast": "\(.*\)".*/\1/p') #$(echo "$parsed_data" | jq -r '.contrast')
+PATH_DATA=$(echo "$json_data" | sed -n 's/.*"path_data": "\(.*\)".*/\1/p')
+DATA_TYPE=$(echo "$json_data" | sed -n 's/.*"data_type": "\(.*\)".*/\1/p')
+IMAGE_SUFFIX=$(echo "$json_data" | sed -n 's/.*"suffix_image": "\(.*\)".*/\1/p')
+CONTRAST=$(echo "$json_data" | sed -n 's/.*"contrast": "\(.*\)".*/\1/p')
 PATH_DATA_PROCESSED="${PATH_DATA}derivatives/labels/${SUBJECT}/${DATA_TYPE}"
 PATH_RESULTS="${PATH_DATA}derivatives/labels/results"
 PATH_LOG="${PATH_DATA}derivatives/labels/log"
@@ -96,7 +96,7 @@ fi
 # Label discs if do not exist
 # ======================================================================================================================
 
-FILELABEL="${SUBJECT}${IMAGE_SUFFIX}_label-disc.nii.gz"
+FILELABEL="${PATH_DATA}derivatives/labels/${SUBJECT}/${DATA_TYPE}/${SUBJECT}${IMAGE_SUFFIX}_label-disc.nii.gz"
 
 echo "Looking for disc labels: ${FILELABEL}"
 if [[ -e ${FILELABEL} ]]; then
@@ -104,9 +104,10 @@ if [[ -e ${FILELABEL} ]]; then
 else
   echo "Not found. Proceeding with automatic labeling."
   # Generate labeled segmentation
-  sct_label_vertebrae -i ${FILE} -ofolder "${PATH_DATA}derivatives/labels/${SUBJECT}/${DATA_TYPE}" -o ${FILELABEL} -s ${FILESEG} -c ${CONTRAST} -qc "${PATH_QC}" -qc-subject "${SUBJECT}"
+  sct_label_vertebrae -i ${FILE} -s ${FILESEG} -c ${CONTRAST} -qc "${PATH_QC}" -qc-subject "${SUBJECT}"
+  mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled_discs.nii.gz" "${SUBJECT}${IMAGE_SUFFIX}_label-disc.nii.gz"
+  mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled.nii.gz" "${SUBJECT}${IMAGE_SUFFIX}_label-disc_levels.nii.gz"
 fi
-
 
 # Verify presence of output files and write log file if error
 # ======================================================================================================================
