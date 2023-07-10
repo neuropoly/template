@@ -110,7 +110,7 @@ def read_dataset(fname_json = 'configuration.json', path_data = './'):
 
     return dataset_info
 
-def generate_centerline(dataset_info, regenerate = False, algo_fitting = 'linear', smooth = 50, degree = None, minmax = None):
+def generate_centerline(dataset_info, algo_fitting = 'linear', smooth = 50, degree = None, minmax = None):
     """
     This function generates spinal cord centerline from binary images (either an image of centerline or segmentation)
     :param dataset_info: dictionary containing dataset information
@@ -131,39 +131,29 @@ def generate_centerline(dataset_info, regenerate = False, algo_fitting = 'linear
         fname_image_discs = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-disc.nii.gz'
         fname_centerline = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-centerline'
 
-        # if centerline exists, we load it, if not, we compute it
-        if os.path.isfile(fname_centerline + '.npz') and not regenerate:
-            print("Centerline for " + subject_name + " exists and will not be recomputed!")
-            centerline = Centerline(fname = fname_centerline + '.npz')
+        if os.path.isfile(fname_image_seg):
+            print(subject_name + ' SC segmentation exists. Extracting centerline from ' + fname_image_seg)
+            im_seg = Image(fname_image_seg).change_orientation('RPI')
+            param_centerline = ParamCenterline(algo_fitting = algo_fitting, smooth = smooth, degree = degree, minmax = minmax) 
         else:
-            if os.path.isfile(fname_image_seg):
-                print(subject_name + ' SC segmentation exists. Extracting centerline from ' + fname_image_seg)
-                im_seg = Image(fname_image_seg).change_orientation('RPI')
-                param_centerline = ParamCenterline(algo_fitting = algo_fitting, smooth = smooth, degree = degree, minmax = minmax) 
-            else:
-                print(subject_name + ' SC segmentation does not exist. Extracting centerline from ' + fname_image)
-                im_seg = Image(fname_image).change_orientation('RPI')
-                param_centerline = ParamCenterline(algo_fitting = 'optic', smooth = smooth, degree = 5, minmax = minmax)
+            print(subject_name + ' SC segmentation does not exist. Extracting centerline from ' + fname_image)
+            im_seg = Image(fname_image).change_orientation('RPI')
+            param_centerline = ParamCenterline(algo_fitting = 'optic', smooth = smooth, degree = 5, minmax = minmax)
 
-            # extracting intervertebral discs
-            im_discs = Image(fname_image_discs).change_orientation('RPI')
-            coord = im_discs.getNonZeroCoordinates(sorting = 'z', reverse_coord = True)
-            coord_physical = []
-            for c in coord:
-                if c.value <= last_disc or c.value in [48, 49, 50, 51, 52]:
-                    c_p = list(im_discs.transfo_pix2phys([[c.x, c.y, c.z]])[0])
-                    c_p.append(c.value)
-                    coord_physical.append(c_p)
+        # extracting intervertebral discs
+        im_discs = Image(fname_image_discs).change_orientation('RPI')
+        coord = im_discs.getNonZeroCoordinates(sorting = 'z', reverse_coord = True)
+        coord_physical = []
+        for c in coord:
+            if c.value <= last_disc or c.value in [48, 49, 50, 51, 52]:
+                c_p = list(im_discs.transfo_pix2phys([[c.x, c.y, c.z]])[0])
+                c_p.append(c.value)
+                coord_physical.append(c_p)
 
-            # extracting centerline
-            im_ctl, arr_ctl, arr_ctl_der, _ = get_centerline(im_seg, param = param_centerline, space = 'phys')
-
-            # save centerline as .nii.gz file
-            im_ctl.save(fname_centerline + '.nii.gz', dtype = 'float32')
-            centerline = Centerline(points_x = arr_ctl[0], points_y = arr_ctl[1], points_z = arr_ctl[2], deriv_x = arr_ctl_der[0], deriv_y = arr_ctl_der[1], deriv_z = arr_ctl_der[2])
-            centerline.compute_vertebral_distribution(coord_physical)
-            # save centerline .npz file
-            centerline.save_centerline(fname_output = fname_centerline)
+        # extracting centerline
+        _, arr_ctl, arr_ctl_der, _ = get_centerline(im_seg, param = param_centerline, space = 'phys')
+        centerline = Centerline(points_x = arr_ctl[0], points_y = arr_ctl[1], points_z = arr_ctl[2], deriv_x = arr_ctl_der[0], deriv_y = arr_ctl_der[1], deriv_z = arr_ctl_der[2])
+        centerline.compute_vertebral_distribution(coord_physical)
 
         list_centerline.append(centerline)
         tqdm_bar.update(1)
@@ -675,7 +665,7 @@ def main(configuration_file):
     dataset_info = read_dataset(configuration_file)
 
     # generating centerlines
-    list_centerline = generate_centerline(dataset_info = dataset_info, regenerate = False) 
+    list_centerline = generate_centerline(dataset_info = dataset_info) 
 
     # computing average template centerline and vertebral distribution
     points_average_centerline, position_template_discs = average_centerline(list_centerline = list_centerline,
