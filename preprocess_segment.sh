@@ -37,10 +37,6 @@ PATH_DATA=$(echo "$json_data" | sed -n 's/.*"path_data": "\(.*\)".*/\1/p')
 DATA_TYPE=$(echo "$json_data" | sed -n 's/.*"data_type": "\(.*\)".*/\1/p')
 IMAGE_SUFFIX=$(echo "$json_data" | sed -n 's/.*"suffix_image": "\(.*\)".*/\1/p')
 CONTRAST=$(echo "$json_data" | sed -n 's/.*"contrast": "\(.*\)".*/\1/p')
-PATH_DATA_PROCESSED="${PATH_DATA}derivatives/labels/${SUBJECT}/${DATA_TYPE}"
-PATH_RESULTS="${PATH_DATA}derivatives/labels/results"
-PATH_LOG="${PATH_DATA}derivatives/labels/log"
-PATH_QC="${PATH_DATA}derivatives/labels/qc"
 
 # Uncomment for full verbose
 # set -v
@@ -50,15 +46,6 @@ set -e
 
 # Exit if user presses CTRL+C (Linux) or CMD+C (OSX)
 trap "echo Caught Keyboard Interrupt within script. Exiting now.; exit" INT
-
-
-# Check if correct directories exist and make them otherwise
-# ======================================================================================================================
-
-[ -d ${PATH_DATA_PROCESSED} ] || mkdir -p ${PATH_DATA_PROCESSED}
-[ -d ${PATH_RESULTS} ] || mkdir -p ${PATH_RESULTS}
-[ -d ${PATH_LOG} ] || mkdir -p ${PATH_LOG}
-[ -d ${PATH_QC} ] || mkdir -p ${PATH_QC}
 
 
 # Script starts here
@@ -91,6 +78,7 @@ else
   echo "Not found. Proceeding with automatic segmentation."
   # Segment spinal cord
   sct_deepseg_sc -i ${FILE} -o ${FILESEG} -c ${CONTRAST} -qc ${PATH_QC} -qc-subject ${SUBJECT}
+  # TODO: MOVE THAT FILE UNDER derivatives/labels
 fi
 
 # Label discs if do not exist
@@ -106,11 +94,13 @@ else
   # Generate labeled segmentation
   sct_label_vertebrae -i ${FILE} -s ${FILESEG} -c ${CONTRAST} -qc "${PATH_QC}" -qc-subject "${SUBJECT}"
   mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled_discs.nii.gz" "${SUBJECT}${IMAGE_SUFFIX}_label-disc.nii.gz"
+  # TODO: MOVE THAT FILE UNDER derivatives/labels
   mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled.nii.gz" "${SUBJECT}${IMAGE_SUFFIX}_label-disc_levels.nii.gz"
 fi
 
 # Verify presence of output files and write log file if error
 # ======================================================================================================================
+# TODO: check files under derivatives/labels
 FILES_TO_CHECK=(
   "$FILESEG"
   "$FILELABEL"
