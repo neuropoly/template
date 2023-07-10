@@ -32,7 +32,7 @@ from spinalcordtoolbox.centerline.core import get_centerline
 from spinalcordtoolbox.image import Image
 from spinalcordtoolbox.download import download_data, unzip
 
-def average_coordinates_over_slices(self, image): ### deprecated from latest version of spinalcordtoolbox
+def average_coordinates_over_slices(self, image): # deprecated from spinalcordtoolbox commit `e740edf4c8408ffa44ef7ba23ad068c6d07e4b87`
     # extracting points information for each coordinates
     P_x = np.array([point[0] for point in self.points])
     P_y = np.array([point[1] for point in self.points])
@@ -72,33 +72,6 @@ def average_coordinates_over_slices(self, image): ### deprecated from latest ver
     z_centerline_deriv = coord_mean_d[:, :][:, 2]
 
     return x_centerline_fit, y_centerline_fit, z_centerline, x_centerline_deriv, y_centerline_deriv, z_centerline_deriv
-
-###### DELETE BELOW: 
-# def _get_coordinate_interpolated(self, vertebral_level, relative_position, backup_index = None, backup_centerline = None, mode = 'levels'):
-#     index_closest = self.get_closest_to_absolute_position(vertebral_level, relative_position, backup_index = backup_index, backup_centerline = backup_centerline)
-#     if index_closest is None:
-#         return [np.nan, np.nan, np.nan]
-
-#     relative_position_closest = self.dist_points_rel[index_closest]
-#     coordinate_closest = self.points[index_closest]
-
-#     if relative_position < relative_position_closest:
-#         index_next = index_closest + 1
-#     else:
-#         index_next = index_closest - 1
-#     relative_position_next = self.dist_points_rel[index_next]
-#     coordinate_next = self.points[index_next]
-#     #if (relative_position_next != relative_position_closest):
-#     weight_closest = abs(relative_position - relative_position_closest) / abs(relative_position_next - relative_position_closest)
-#     weight_next = abs(relative_position - relative_position_next) / abs(relative_position_next - relative_position_closest)
-#     #else:
-#        # weight_closest = 1
-#        # weight_next = 0 # same thing!
-#     coordinate_result = [weight_closest * coordinate_closest[0] + weight_next * coordinate_next[0],
-#                          weight_closest * coordinate_closest[1] + weight_next * coordinate_next[1],
-#                          weight_closest * coordinate_closest[2] + weight_next * coordinate_next[2]]
-
-#     return coordinate_result
 
 def read_dataset(fname_json = 'configuration.json', path_data = './'):
     """
@@ -146,7 +119,6 @@ def generate_centerline(dataset_info, algo_fitting = 'linear', smooth = 50, degr
         fname_image = path_data + subject_name + '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '.nii.gz'
         fname_image_seg = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-SC_seg.nii.gz'
         fname_image_discs = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-disc.nii.gz'
-        fname_centerline = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-centerline'
 
         if os.path.isfile(fname_image_seg):
             print(subject_name + ' SC segmentation exists. Extracting centerline from ' + fname_image_seg)
@@ -178,7 +150,7 @@ def generate_centerline(dataset_info, algo_fitting = 'linear', smooth = 50, degr
     os.chdir(current_path)
     return list_centerline
 
-# def compute_ICBM152_centerline(dataset_info): ###### FIX
+# def compute_ICBM152_centerline(dataset_info): # ??????
 #     """
 #     This function extracts the centerline from the ICBM152 brain template
 #     :param dataset_info: dictionary containing dataset information
@@ -221,7 +193,7 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
 
     last_disc = int(dataset_info['last_disc'])
     # extracting centerline from ICBM152
-    # if use_ICBM152: centerline_icbm152 = compute_ICBM152_centerline(dataset_info) ###### FIX
+    # if use_ICBM152: centerline_icbm152 = compute_ICBM152_centerline(dataset_info) # ??????
     
     list_dist_discs = []
     for centerline in list_centerline: list_dist_discs.append(centerline.distance_from_C1label)
@@ -304,18 +276,17 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
     disc_position_in_centerline = {}
 
     # iterate over each disc level
-    for i in range(len(average_distances)): ###### C1, C2, C3, C4, ...
+    for i in range(len(average_distances)):
         disc_label = average_distances[i][0]
         average_positions_from_C1[disc_label] = average_distances[i][1]
 
-        for j in range(number_of_points_between_levels): ###### C1: {0, 1, 2, 3, ...}
-            relative_position = float(j) / float(number_of_points_between_levels) ###### C1: {0/100, 1/100, 2/100, 3/100, ...}
+        for j in range(number_of_points_between_levels):
+            relative_position = float(j) / float(number_of_points_between_levels)
             if disc_label in ['PMJ', 'PMG']:
                 relative_position = 1.0 - relative_position
             list_coordinates = [[]] * len(list_centerline)
-            for k, centerline in enumerate(list_centerline): ###### iterate through each centerline and get actual absolute coordinate
-                #if disc_label in centerline.distance_from_C1label:
-               list_coordinates[k] = centerline.get_closest_to_relative_position(disc_label, relative_position) ### centerline.get_coordinate_interpolated(disc_label, relative_position)
+            for k, centerline in enumerate(list_centerline):
+               list_coordinates[k] = centerline.get_closest_to_relative_position(disc_label, relative_position) 
             # average all coordinates
             get_avg = []
             for item in list_coordinates: 
@@ -391,12 +362,12 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
         points_average_centerline = points_average_centerline_template
     return points_average_centerline, position_template_discs
 
-def generate_initial_template_space(dataset_info, points_average_centerline, position_template_discs, algo_fitting = 'linear', smooth = 50, degree = None, minmax = None): ##DONE additional options in nb/generate_initial_template_space_branch
+def generate_initial_template_space(dataset_info, points_average_centerline, position_template_discs, algo_fitting = 'linear', smooth = 50, degree = None, minmax = None):
     """
     This function generates the initial template space, on which all images will be registered.
     :param points_average_centerline: list of points (x, y, z) of the average spinal cord and brainstem centerline
     :param position_template_discs: index of intervertebral discs along the template centerline
-    :return: NIFTI files in RPI orientation (template space, template centerline, template disc positions) & .npz file of template Centerline object ##DONE package updates in nb/generate_initial_template_space_branch
+    :return: NIFTI files in RPI orientation (template space, template centerline, template disc positions) & .npz file of template Centerline object
     """
     # initializing variables
     path_template = dataset_info['path_data'] + 'derivatives/template/'
@@ -454,12 +425,12 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
             sct.printv(str(coord_pix))
             sct.printv('ERROR: the disc label ' + str(disc) + ' is not in the template image.')
     image_discs.save(path_template + 'template_label-disc.nii.gz', dtype = 'uint8')
-    print(f'\nSaving disc positions in {image_discs.orientation} orientation as {path_template}template_label-disc.nii.gz\n') ###NEW
+    print(f'\nSaving disc positions in {image_discs.orientation} orientation as {path_template}template_label-disc.nii.gz\n')
 
-    # generate template centerline as a npz file ##DONE updated template Centerline object creation and saving as .npz file in nb/generate_initial_template_space_branch
+    # generate template centerline as a npz file
     param_centerline = ParamCenterline(algo_fitting = algo_fitting, smooth = smooth, degree = degree, minmax = minmax) 
     # centerline params of original template centerline had options that you cannot just provide `get_centerline` with anymroe (algo_fitting = 'nurbs', nurbs_pts_number = 4000, all_slices = False, phys_coordinates = True, remove_outliers = True)
-    _, arr_ctl, arr_ctl_der, _ = get_centerline(image_centerline, param = param_centerline, space = 'phys') ### we don't need to save im_centerline! ### straightening._get_centerline(im_seg,param_centerline, 1) ### What Rohan & Benjamin added!
+    _, arr_ctl, arr_ctl_der, _ = get_centerline(image_centerline, param = param_centerline, space = 'phys')
     centerline_template = Centerline(points_x = arr_ctl[0], points_y = arr_ctl[1], points_z = arr_ctl[2], deriv_x = arr_ctl_der[0], deriv_y = arr_ctl_der[1], deriv_z = arr_ctl_der[2])
     centerline_template.compute_vertebral_distribution(coord_physical)        
     centerline_template.save_centerline(fname_output = path_template + 'template_label-centerline')
@@ -508,13 +479,13 @@ def straighten_all_subjects(dataset_info, normalized = False):
         tqdm_bar.update(1)
     tqdm_bar.close()
 
-def normalize_intensity_template(dataset_info, verbose = 1): ### Removed fname_template_centerline = None -> why would we want this?
+def normalize_intensity_template(dataset_info, verbose = 1):
     """
     This function normalizes the intensity of the image inside the spinal cord
     :return:
     """
     fname_template_centerline = dataset_info['path_data'] + 'derivatives/template/' + 'template_label-centerline.npz'
-    list_subjects = dataset_info['include-list'].split(' ') ###NEW
+    list_subjects = dataset_info['include-list'].split(' ')
 
     average_intensity = []
     intensity_profiles = {}
@@ -614,7 +585,7 @@ def normalize_intensity_template(dataset_info, verbose = 1): ### Removed fname_t
         image_new = image.copy()
         image_new.change_type(dtype = 'float32')
         for i in range(nz):
-            if intensity_profiles[subject_name][i] == 0: intensity_profiles[subject_name][i] = 0.001 ### is this how Rohan solved this?
+            if intensity_profiles[subject_name][i] == 0: intensity_profiles[subject_name][i] = 0.001
             image_new.data[:, :, i] *= average_intensity / intensity_profiles[subject_name][i]
 
         # Save intensity normalized template
