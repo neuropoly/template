@@ -116,7 +116,7 @@ sct_run_batch -script preprocess_segment.sh -config configuration.json -include-
 ```
 
 With:
-- `PATH_OUT`: The location where to output the results.
+- `PATH_OUT`: The location where to output and then QC the results. Example: `/scratch/template_preproc_YYYYMMDD-HHMMSS`
 - `N_CPU`: The number of CPU cores to dedicate to this task (one subject will be process per core).
 
 > **Note**
