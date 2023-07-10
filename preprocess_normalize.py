@@ -1,3 +1,20 @@
+'''
+Wrapper to processing scripts, which loops across subjects. Data should be
+Wrapper to several functions that normalize the spinal cord across subjects,
+in preparation for template generation. More specifically:
+
+* Extracting the spinal cord centerline and computing the vertebral 
+    distribution along the spinal cord, for all subjects.
+* Computing the average centerline, by averaging the position of each 
+    intervertebral discs. 
+* Straightening the average centerline of the spinal cord.
+* Generating the initial template space, based on the average centerline and 
+    positions of intervertebral discs,
+* Straightening of all subjects' spinal cord on the initial template space.
+
+Usage: `python preprocess_normalize.py configuration.json`
+'''
+
 import json
 import os
 import shutil

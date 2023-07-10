@@ -130,8 +130,9 @@ sct_run_batch -include-list sub-001 sub-002 sub-003 -config configuration.json
 ### 1.5 Normalize spinal cord across subjects
 
 `preprocess_normalize.py` contains several functions to normalize the spinal cord across subjects, in preparation for template generation. More specifically:
-* Extracting the spinal cord centerline and compute the vertebral distribution along the spinal cord, for all subjects,
-* Computing the average centerline, by averaging the position of each intervertebral discs. The average centerline of the spinal cord is straightened,
+* Extracting the spinal cord centerline and computing the vertebral distribution along the spinal cord, for all subjects.
+* Computing the average centerline, by averaging the position of each intervertebral discs. 
+* Straightening the average centerline of the spinal cord.
 * Generating the initial template space, based on the average centerline and positions of intervertebral discs,
 * Straightening of all subjects' spinal cord on the initial template space.
 
