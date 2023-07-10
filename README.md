@@ -119,8 +119,7 @@ sct_run_batch -include-list sub-001 sub-002 sub-003 -config configuration.json
 ```
 
 > **Note**
-> Replace values appropriately based on your setup (eg: -jobs 6 means that 10 CPU-cores are used. For more details, run `sct_run_batch -h`).
-> If you wish to exclude subjects, add flag "-exclude-list". Example: `-exclude-list sub-107 sub-125`
+> Copy-paste the values to the `include-list` key from `configuration.json` to go after `-include-list` option here.
 
 ### 1.4 Quality control (QC) labels
 
