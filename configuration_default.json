@@ -1,9 +1,6 @@
 {
-	"jobs": 3,
 	"path_data": "/path/to/data/",
-	"path_output": "/path/to/data/derivatives/labels/",
 	"include-list": "sub-001 sub-002 sub-003",
-	"script": "preprocess_segment.sh",
 	"data_type": "anat",
 	"contrast": "t1",
 	"suffix_image": "_T1w",

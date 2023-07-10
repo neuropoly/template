@@ -94,11 +94,8 @@ conda activate venv_sct
 
 Copy the file `configuration_default.json` and rename it as `configuration.json`. Edit it and modify according to your setup:
 
-- `jobs`: Number of jobs to run in parallel when calling `sct_run_batch` (step 1.3).
 - `path_data`: Absolute path to the input [BIDS dataset](#dataset-structure); the path should end with `/`.
-- `path_output`: `path_data/derivatives/labels/`, where `path_data` is the same as above; necessary when calling `sct_run_batch` (step 1.3).
 - `include-list`: List of subjects to include in the preprocessing, separated with a space.
-- `script`: `preprocess_segment.sh`; necessary when calling `sct_run_batch` (step 1.3).
 - `data_type`: [BIDS data type](https://bids-standard.github.io/bids-starter-kit/folders_and_files/folders.html#datatype), same as subfolder name in dataset structure. Typically, it should be "anat".
 - `contrast`: Contrast to be used by `sct_deepseg_sc` function.
 - `suffix_image`: Suffix for image data, after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`).
@@ -115,7 +112,7 @@ Copy the file `configuration_default.json` and rename it as `configuration.json`
 
 Run script:
 ```
-sct_run_batch -include-list sub-001 sub-002 sub-003 -config configuration.json 
+sct_run_batch -jobs N_SUBJECTS -include-list sub-001 sub-002 sub-003 -script preprocess_segment.sh -path-output path_data/derivatives/labels/ -config configuration.json 
 ```
 
 > **Note**
