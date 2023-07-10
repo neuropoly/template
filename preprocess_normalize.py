@@ -1,5 +1,4 @@
 '''
-Wrapper to processing scripts, which loops across subjects. Data should be
 Wrapper to several functions that normalize the spinal cord across subjects,
 in preparation for template generation. More specifically:
 
