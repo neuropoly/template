@@ -11,6 +11,20 @@ in preparation for template generation. More specifically:
     positions of intervertebral discs,
 * Straightening of all subjects' spinal cord on the initial template space.
 
+The data are expected to be located according to the following file structure:
+
+├── sub-XXX  <---- image
+│   └── anat
+│       └──sub-XXX_T1w.nii.gz
+...
+└── derivatives
+    └── labels
+        ├── sub-XXX
+        │   └── anat
+        │       │──sub-XXX_T1w_label-SC_seg.nii.gz  <---- spinal cord segmentation
+        │       └──sub-XXX_T1w_label-SC_seg_labeled_discs.nii.gz  <---- disc labels
+        ...
+
 Usage: `python preprocess_normalize.py configuration.json`
 '''
 
