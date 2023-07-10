@@ -112,15 +112,19 @@ Copy the file `configuration_default.json` and rename it as `configuration.json`
 
 Run script:
 ```
-sct_run_batch -jobs N_SUBJECTS -include-list sub-001 sub-002 sub-003 -script preprocess_segment.sh -path-output path_data/derivatives/labels/ -config configuration.json 
+sct_run_batch -script preprocess_segment.sh -config configuration.json -include-list sub-001 sub-002 sub-003 -path-output PATH_OUT -jobs N_CPU
 ```
+
+With:
+- `PATH_OUT`: The location where to output the results.
+- `N_CPU`: The number of CPU cores to dedicate to this task (one subject will be process per core).
 
 > **Note**
 > Copy-paste the values to the `include-list` key from `configuration.json` to go after `-include-list` option here.
 
 ### 1.4 Quality control (QC) labels
 
-* Spinal cord segmentation (or centerlines) and disc labels can be displayed by opening: `/PATH/TO/results/qc/index.html`
+* Spinal cord segmentation (or centerlines) and disc labels can be displayed by opening: `/PATH_OUT/qc/index.html`
 * See [tutorial](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) for tips on how to QC and fix segmentation (or centerline) and/or disc labels manually.
 
 
