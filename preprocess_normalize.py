@@ -149,35 +149,35 @@ def generate_centerline(dataset_info, algo_fitting = 'linear', smooth = 50, degr
     os.chdir(current_path)
     return list_centerline
 
-# def compute_ICBM152_centerline(dataset_info): # ??????
-#     """
-#     This function extracts the centerline from the ICBM152 brain template
-#     :param dataset_info: dictionary containing dataset information
-#     :return:
-#     """
-#     path_data = dataset_info['path_data']
+def compute_ICBM152_centerline(dataset_info):
+    """
+    This function extracts the centerline from the ICBM152 brain template
+    :param dataset_info: dictionary containing dataset information
+    :return:
+    """
+    path_data = dataset_info['path_data']
 
-#     if not os.path.isdir(path_data + 'icbm152/'):
-#         download_data_template(path_data = path_data, name = 'icbm152', force = False)
+    if not os.path.isdir(path_data + 'icbm152/'):
+        download_data_template(path_data = path_data, name = 'icbm152', force = False)
 
-#     image_discs = Image(path_data + 'icbm152/mni_icbm152_t1_tal_nlin_sym_09c_discs_manual.nii.gz')
-#     coord = image_discs.getNonZeroCoordinates(sorting = 'z', reverse_coord = True)
-#     coord_physical = []
+    image_discs = Image(path_data + 'icbm152/mni_icbm152_t1_tal_nlin_sym_09c_discs_manual.nii.gz')
+    coord = image_discs.getNonZeroCoordinates(sorting = 'z', reverse_coord = True)
+    coord_physical = []
 
-#     for c in coord:
-#         if c.value <= 20 or c.value in [48, 49, 50, 51, 52]:  # 22 corresponds to L2
-#             c_p = list(image_discs.transfo_pix2phys([[c.x, c.y, c.z]])[0])
-#             c_p.append(c.value)
-#             coord_physical.append(c_p)
+    for c in coord:
+        if c.value <= 20 or c.value in [48, 49, 50, 51, 52]:  # 22 corresponds to L2
+            c_p = list(image_discs.transfo_pix2phys([[c.x, c.y, c.z]])[0])
+            c_p.append(c.value)
+            coord_physical.append(c_p)
 
-#     x_centerline_fit, y_centerline_fit, z_centerline, x_centerline_deriv, y_centerline_deriv, z_centerline_deriv = smooth_centerline(
-#         path_data + 'icbm152/mni_icbm152_t1_centerline_manual.nii.gz', algo_fitting = 'nurbs',
-#         verbose = 0, nurbs_pts_number = 300, all_slices = False, phys_coordinates = True, remove_outliers = False)
+    x_centerline_fit, y_centerline_fit, z_centerline, x_centerline_deriv, y_centerline_deriv, z_centerline_deriv = smooth_centerline(
+        path_data + 'icbm152/mni_icbm152_t1_centerline_manual.nii.gz', algo_fitting = 'nurbs',
+        verbose = 0, nurbs_pts_number = 300, all_slices = False, phys_coordinates = True, remove_outliers = False)
 
-#     centerline = Centerline(x_centerline_fit, y_centerline_fit, z_centerline, x_centerline_deriv, y_centerline_deriv, z_centerline_deriv)
+    centerline = Centerline(x_centerline_fit, y_centerline_fit, z_centerline, x_centerline_deriv, y_centerline_deriv, z_centerline_deriv)
 
-#     centerline.compute_vertebral_distribution(coord_physical, label_reference = 'PMG')
-#     return centerline
+    centerline.compute_vertebral_distribution(coord_physical, label_reference = 'PMG')
+    return centerline
 
 def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_label_ref = None):
     """
@@ -192,7 +192,7 @@ def average_centerline(list_centerline, dataset_info, use_ICBM152 = False, use_l
 
     last_disc = int(dataset_info['last_disc'])
     # extracting centerline from ICBM152
-    # if use_ICBM152: centerline_icbm152 = compute_ICBM152_centerline(dataset_info) # ??????
+    if use_ICBM152: centerline_icbm152 = compute_ICBM152_centerline(dataset_info)
     
     list_dist_discs = []
     for centerline in list_centerline: list_dist_discs.append(centerline.distance_from_C1label)
