@@ -116,7 +116,7 @@ sct_run_batch -script preprocess_segment.sh -config configuration.json -include-
 ```
 
 With:
-- `PATH_OUT`: The location where to output and then QC the results. Example: `/scratch/template_preproc_YYYYMMDD-HHMMSS`
+- `PATH_OUT`: The location where to output the results, the logs and the QC information. Example: `/scratch/template_preproc_YYYYMMDD-HHMMSS`. This is a temporary directory in that it is only needed to QC your labels. It therefore cannot be stored inside `path_data`.
 - `N_CPU`: The number of CPU cores to dedicate to this task (one subject will be process per core).
 
 > **Note**

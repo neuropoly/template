@@ -3,9 +3,6 @@
 # Process data. This script is designed to be run in the folder for a single subject, however 'sct_run_batch' can be
 # used to run this script multiple times in parallel across a multi-subject BIDS dataset.
 #
-# This script only deals with T2w and MT images for example purpose. For a more comprehensive qMRI analysis, see for
-# example this script: https://github.com/spine-generic/spine-generic/blob/master/process_data.sh
-#
 # Usage:
 #   ./process_data.sh <SUBJECT>
 #
@@ -37,6 +34,8 @@ PATH_DATA=$(echo "$json_data" | sed -n 's/.*"path_data": "\(.*\)".*/\1/p')
 DATA_TYPE=$(echo "$json_data" | sed -n 's/.*"data_type": "\(.*\)".*/\1/p')
 IMAGE_SUFFIX=$(echo "$json_data" | sed -n 's/.*"suffix_image": "\(.*\)".*/\1/p')
 CONTRAST=$(echo "$json_data" | sed -n 's/.*"contrast": "\(.*\)".*/\1/p')
+PATH_DATASET_OUTPUT="${PATH_DATA}derivatives/labels/${SUBJECT}/${DATA_TYPE}"
+mkdir -p ${PATH_DATASET_OUTPUT}
 
 # Uncomment for full verbose
 # set -v
@@ -71,43 +70,42 @@ FILE="${SUBJECT}${IMAGE_SUFFIX}.nii.gz"
 FILESEG="${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg.nii.gz"
 
 echo "Looking for segmentation: ${FILESEG}"
-if [[ -e ${FILESEG} ]]; then
+if [[ -e "${PATH_DATASET_OUTPUT}/${FILESEG}" ]]; then
   echo "Found! Using SC segmentation that exists."
-  sct_qc -i ${FILE} -s ${FILESEG} -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
+  sct_qc -i ${FILE} -s "${PATH_DATASET_OUTPUT}/${FILESEG}" -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
 else
   echo "Not found. Proceeding with automatic segmentation."
   # Segment spinal cord
   sct_deepseg_sc -i ${FILE} -o ${FILESEG} -c ${CONTRAST} -qc ${PATH_QC} -qc-subject ${SUBJECT}
-  # TODO: MOVE THAT FILE UNDER derivatives/labels
+  mv ${FILESEG} "${PATH_DATASET_OUTPUT}/${FILESEG}"
 fi
 
 # Label discs if do not exist
 # ======================================================================================================================
 
-FILELABEL="${PATH_DATA}derivatives/labels/${SUBJECT}/${DATA_TYPE}/${SUBJECT}${IMAGE_SUFFIX}_label-disc.nii.gz"
+FILELABEL="${SUBJECT}${IMAGE_SUFFIX}_label-disc.nii.gz"
 
 echo "Looking for disc labels: ${FILELABEL}"
-if [[ -e ${FILELABEL} ]]; then
+if [[ -e "${PATH_DATASET_OUTPUT}/${FILELABEL}" ]]; then
   echo "Found! Using vertebral labels that exist."
+  sct_qc -i ${FILE} -s "${PATH_DATASET_OUTPUT}/${FILELABEL}" -p sct_label_vertebrae -qc ${PATH_QC} -qc-subject ${SUBJECT}
 else
   echo "Not found. Proceeding with automatic labeling."
   # Generate labeled segmentation
-  sct_label_vertebrae -i ${FILE} -s ${FILESEG} -c ${CONTRAST} -qc "${PATH_QC}" -qc-subject "${SUBJECT}"
-  mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled_discs.nii.gz" "${SUBJECT}${IMAGE_SUFFIX}_label-disc.nii.gz"
-  # TODO: MOVE THAT FILE UNDER derivatives/labels
-  mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled.nii.gz" "${SUBJECT}${IMAGE_SUFFIX}_label-disc_levels.nii.gz"
+  sct_label_vertebrae -i ${FILE} -s "${PATH_DATASET_OUTPUT}/${FILESEG}" -ofolder ${PATH_DATASET_OUTPUT} -c ${CONTRAST} -qc "${PATH_QC}" -qc-subject "${SUBJECT}"
+  mv "${PATH_DATASET_OUTPUT}/${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled_discs.nii.gz" "${PATH_DATASET_OUTPUT}/${FILELABEL}"
+  rm "${PATH_DATASET_OUTPUT}/${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled.nii.gz"
 fi
 
 # Verify presence of output files and write log file if error
 # ======================================================================================================================
-# TODO: check files under derivatives/labels
 FILES_TO_CHECK=(
   "$FILESEG"
   "$FILELABEL"
 )
 for file in "${FILES_TO_CHECK[@]}"; do
-  if [ ! -e "${file}" ]; then
-    echo "${SUBJECT}/${file} does not exist" >> "${PATH_LOG}/error.log"
+  if [ ! -e "${PATH_DATASET_OUTPUT}/${file}" ]; then
+    echo "${PATH_DATASET_OUTPUT}/${file} does not exist" >> "${PATH_LOG}/error.log"
   fi
 done
 
