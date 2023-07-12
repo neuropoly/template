@@ -94,8 +94,8 @@ conda activate venv_sct
 
 Copy the file `configuration_default.json` and rename it as `configuration.json`. Edit it and modify according to your setup:
 
-- `path_data`: Absolute path to the input [BIDS dataset](#dataset-structure); The path should end with `/`.
-- `subjects`: List of subjects to include in the preprocessing, separated with comma.
+- `path_data`: Absolute path to the input [BIDS dataset](#dataset-structure); the path should end with `/`.
+- `include-list`: List of subjects to include in the preprocessing, separated with a space.
 - `data_type`: [BIDS data type](https://bids-standard.github.io/bids-starter-kit/folders_and_files/folders.html#datatype), same as subfolder name in dataset structure. Typically, it should be "anat".
 - `contrast`: Contrast to be used by `sct_deepseg_sc` function.
 - `suffix_image`: Suffix for image data, after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`).
@@ -112,24 +112,28 @@ Copy the file `configuration_default.json` and rename it as `configuration.json`
 
 Run script:
 ```
-sct_run_batch -jobs 6 -path-data "/PATH/TO/dataset" -script preprocess_segment.sh -path-output "/PATH/TO/results"
+sct_run_batch -script preprocess_segment.sh -config configuration.json -include-list sub-001 sub-002 sub-003 -path-output PATH_OUT -jobs N_CPU
 ```
 
+With:
+- `PATH_OUT`: The location where to output the results, the logs and the QC information. Example: `/scratch/template_preproc_YYYYMMDD-HHMMSS`. This is a temporary directory in that it is only needed to QC your labels. It therefore cannot be stored inside `path_data`.
+- `N_CPU`: The number of CPU cores to dedicate to this task (one subject will be process per core).
+
 > **Note**
-> Replace values appropriately based on your setup (eg: -jobs 6 means that 10 CPU-cores are used. For more details, run `sct_run_batch -h`).
-> If you wish to exclude subjects, add flag "-exclude-list". Example: `-exclude-list sub-107 sub-125`
+> Copy-paste the values to the `include-list` key from `configuration.json` to go after `-include-list` option here.
 
 ### 1.4 Quality control (QC) labels
 
-* Spinal cord segmentation (or centerlines) and disc labels can be displayed by opening: `/PATH/TO/results/qc/index.html`
+* Spinal cord segmentation (or centerlines) and disc labels can be displayed by opening: `/PATH_OUT/qc/index.html`
 * See [tutorial](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) for tips on how to QC and fix segmentation (or centerline) and/or disc labels manually.
 
 
 ### 1.5 Normalize spinal cord across subjects
 
 `preprocess_normalize.py` contains several functions to normalize the spinal cord across subjects, in preparation for template generation. More specifically:
-* Extracting the spinal cord centerline and compute the vertebral distribution along the spinal cord, for all subjects,
-* Computing the average centerline, by averaging the position of each intervertebral discs. The average centerline of the spinal cord is straightened,
+* Extracting the spinal cord centerline and computing the vertebral distribution along the spinal cord, for all subjects.
+* Computing the average centerline, by averaging the position of each intervertebral discs. 
+* Straightening the average centerline of the spinal cord.
 * Generating the initial template space, based on the average centerline and positions of intervertebral discs,
 * Straightening of all subjects' spinal cord on the initial template space.
 
