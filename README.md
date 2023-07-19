@@ -71,13 +71,15 @@ dataset/
 
 ## Step 1. Data preprocessing
 
-This pipeline includes the following steps:\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**1.1** Install SCT;\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**1.2** Edit configuration file;\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**1.3** Segment spinal cord and vertebral discs;\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**1.4** Quality control (QC) labels;\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**1.5** Normalize spinal cord across subjects;\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**1.6** Quality control (QC) spinal cord normalization across subjects.
+This pipeline includes the following steps:
+1. Install SCT
+2. Edit configuration file
+3. Segment spinal cord and vertebral discs
+4. Quality control (QC) segmentation and labels using SCT's web-based HTML QC report, and download YML files of data to be corrected
+5. Manually correct files when correction is needed using https://github.com/spinalcordtoolbox/manual-correction
+6. Copy the non-corrected and corrected files back in the input dataset
+7. Normalize spinal cord across subjects
+8. Quality control (QC) spinal cord normalization across subjects.
 
 ### 1.1 Install SCT
 
@@ -116,7 +118,7 @@ sct_run_batch -script preprocess_segment.sh -config configuration.json -include-
 ```
 
 With:
-- `PATH_OUT`: The location where to output the results, the logs and the QC information. Example: `/scratch/template_preproc_YYYYMMDD-HHMMSS`. This is a temporary directory in that it is only needed to QC your labels. It therefore cannot be stored inside `path_data`.
+- `PATH_OUT`: The location where to output the processed data, results, the logs and the QC information. Example: `/scratch/template_preproc_YYYYMMDD-HHMMSS`. This is a temporary directory in that it is only needed to QC your labels. It therefore cannot be stored inside `path_data`.
 - `N_CPU`: The number of CPU cores to dedicate to this task (one subject will be process per core).
 
 > **Note**
