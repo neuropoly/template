@@ -77,6 +77,7 @@ else
   sct_deepseg_sc -i ${FILE} -o ${FILESEG} -c ${CONTRAST} -qc ${PATH_QC} -qc-subject ${SUBJECT}
 fi
 
+
 # Label discs if do not exist
 # ======================================================================================================================
 
@@ -94,6 +95,7 @@ else
   rm "${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled.nii.gz"
 fi
 
+
 # Verify presence of output files and write log file if error
 # ======================================================================================================================
 FILES_TO_CHECK=(
@@ -105,6 +107,7 @@ for file in "${FILES_TO_CHECK[@]}"; do
     echo "${file} does not exist" >> "${PATH_LOG}/error.log"
   fi
 done
+
 
 # Display useful info for the log
 # ======================================================================================================================
