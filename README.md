@@ -132,7 +132,7 @@ With:
 ### 1.5 Manual correction
 
 * Manually correct files when correction is needed using the [SCT manual correction](https://github.com/spinalcordtoolbox/manual-correction) repository;
-* * See [tutorial](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) for tips on how to QC and fix segmentation (or centerline) and/or disc labels manually.
+* See [tutorial](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) for tips on how to QC and fix segmentation (or centerline) and/or disc labels manually.
 
 ### 1.6 Copy the non-corrected and corrected files back in the input dataset, according to the BIDS convention
 ```
