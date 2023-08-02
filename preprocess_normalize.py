@@ -21,8 +21,8 @@ The data are expected to be located according to the following file structure:
     └── labels
         ├── sub-XXX
         │   └── anat
-        │       │──sub-XXX_T1w_label-SC_seg.nii.gz  <---- spinal cord segmentation
-        │       └──sub-XXX_T1w_label-SC_seg_labeled_discs.nii.gz  <---- disc labels
+        │       │──sub-XXX_T1w_label-SC_mask.nii.gz  <---- spinal cord segmentation
+        │       └──sub-XXX_T1w_labels-disc.nii.gz  <---- disc labels
         ...
 
 Usage: `python preprocess_normalize.py configuration.json`
@@ -130,8 +130,8 @@ def generate_centerline(dataset_info, algo_fitting = 'linear', smooth = 50, degr
     # obtaining centerline of each subject
     for subject_name in list_subjects:
         fname_image = path_data + subject_name + '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '.nii.gz'
-        fname_image_seg = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-SC_seg.nii.gz'
-        fname_image_discs = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-disc.nii.gz'
+        fname_image_seg = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-SC_mask.nii.gz'
+        fname_image_discs = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_labels-disc.nii.gz'
 
         if os.path.isfile(fname_image_seg):
             print(subject_name + ' SC segmentation exists. Extracting centerline from ' + fname_image_seg)
@@ -437,8 +437,8 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
         else:
             sct.printv(str(coord_pix))
             sct.printv('ERROR: the disc label ' + str(disc) + ' is not in the template image.')
-    image_discs.save(path_template + 'template_label-disc.nii.gz', dtype = 'uint8')
-    print(f'\nSaving disc positions in {image_discs.orientation} orientation as {path_template}template_label-disc.nii.gz\n')
+    image_discs.save(path_template + 'template_labels-disc.nii.gz', dtype = 'uint8')
+    print(f'\nSaving disc positions in {image_discs.orientation} orientation as {path_template}template_labels-disc.nii.gz\n')
 
     # generate template centerline as a npz file
     param_centerline = ParamCenterline(algo_fitting = algo_fitting, smooth = smooth, degree = degree, minmax = minmax) 
@@ -468,8 +468,8 @@ def straighten_all_subjects(dataset_info, normalized = False):
         if not os.path.exists(folder_out): os.makedirs(folder_out)
         
         fname_image = path_data + subject_name + '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '.nii.gz'
-        fname_image_seg = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-SC_seg.nii.gz'
-        fname_image_discs = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-disc.nii.gz'
+        fname_image_seg = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-SC_mask.nii.gz'
+        fname_image_discs = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_labels-disc.nii.gz'
         fname_image_centerline =  path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-centerline.nii.gz'
         fname_out = subject_name + dataset_info['suffix_image'] + '_straight_norm.nii.gz' if normalized else subject_name + dataset_info['suffix_image'] + '_straight.nii.gz' 
 
@@ -484,7 +484,7 @@ def straighten_all_subjects(dataset_info, normalized = False):
             ' -s ' + fname_input_seg + 
             ' -dest ' + path_template + 'template_label-centerline.nii.gz' + 
             ' -ldisc-input ' + fname_image_discs +        
-            ' -ldisc-dest ' + path_template + 'template_label-disc.nii.gz' + 
+            ' -ldisc-dest ' + path_template + 'template_labels-disc.nii.gz' + 
             ' -ofolder ' + folder_out + 
             ' -o ' + fname_out + 
             ' -disable-straight2curved' + 

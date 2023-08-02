@@ -62,10 +62,10 @@ dataset/
     └── labels
         └── sub-03
             └── anat
-                └── sub-03_T1w_label-SC_seg.nii.gz  <-- Spinal cord segmentation; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
-                └── sub-03_T1w_label-disc.nii.gz  <---- Disc labels; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
-                └── sub-03_T2w_label-SC_seg.nii.gz
-                └── sub-03_T2w_label-disc.nii.gz
+                └── sub-03_T1w_label-SC_mask.nii.gz  <-- Spinal cord segmentation; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
+                └── sub-03_T1w_labels-disc.nii.gz  <---- Disc labels; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
+                └── sub-03_T2w_label-SC_mask.nii.gz
+                └── sub-03_T2w_labels-disc.nii.gz
 ```
 
 
@@ -135,7 +135,7 @@ Manually correct files when correction is needed, following the [SCT manual corr
 * Installation of `manual-correction`
 * `manual_correction.py` script:
 ```
-python manual_correction.py -path-img PATH_OUT/data_processed -suffix-files-seg '_label-SC_mask' -suffix-files-seg '_label-SC_mask' -suffix-files-label '_labels-disc' -config path/to/qc_fail.yml
+python manual_correction.py -path-img PATH_OUT/data_processed -suffix-files-seg '_label-SC_mask' -suffix-files-label '_labels-disc' -config path/to/qc_fail.yml
 ```
 * `copy_files_to_derivatives.py` script:
 ```
