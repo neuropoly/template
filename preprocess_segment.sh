@@ -34,6 +34,7 @@ PATH_DATA=$(echo "$json_data" | sed -n 's/.*"path_data": "\(.*\)".*/\1/p')
 DATA_TYPE=$(echo "$json_data" | sed -n 's/.*"data_type": "\(.*\)".*/\1/p')
 IMAGE_SUFFIX=$(echo "$json_data" | sed -n 's/.*"suffix_image": "\(.*\)".*/\1/p')
 CONTRAST=$(echo "$json_data" | sed -n 's/.*"contrast": "\(.*\)".*/\1/p')
+FILE=$PATH_DATA_PROCESSED/$SUBJECT/$DATA_TYPE/${SUBJECT}${IMAGE_SUFFIX}.nii.gz
 
 # Uncomment for full verbose
 # set -v
@@ -55,17 +56,18 @@ start=`date +%s`
 sct_check_dependencies -short
 
 # Go to folder where data will be copied and processed
-cd $PATH_DATA_PROCESSED
+mkdir -p $PATH_DATA_PROCESSED/$SUBJECT/$DATA_TYPE
+mkdir -p $PATH_DATA_PROCESSED/derivatives/labels/$SUBJECT/$DATA_TYPE
+cd $PATH_DATA_PROCESSED/derivatives/labels/$SUBJECT/$DATA_TYPE
 
 # Copy source images
-rsync -avzh $PATH_DATA/$SUBJECT/$DATA_TYPE/* .
+rsync -avzh $PATH_DATA/$SUBJECT/$DATA_TYPE/${SUBJECT}${IMAGE_SUFFIX}.nii.gz $PATH_DATA_PROCESSED/$SUBJECT/$DATA_TYPE
 
 
 # Segment spinal cord (SC) if does not exist
 # ======================================================================================================================
 
-FILE="${SUBJECT}${IMAGE_SUFFIX}.nii.gz"
-FILESEG="${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg.nii.gz"
+FILESEG="${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask.nii.gz"
 
 echo "Looking for segmentation: ${FILESEG}"
 if [[ -e "${FILESEG}" ]]; then
@@ -81,7 +83,7 @@ fi
 # Label discs if do not exist
 # ======================================================================================================================
 
-FILELABEL="${SUBJECT}${IMAGE_SUFFIX}_label-disc.nii.gz"
+FILELABEL="${SUBJECT}${IMAGE_SUFFIX}_labels-disc.nii.gz"
 
 echo "Looking for disc labels: ${FILELABEL}"
 if [[ -e "${FILELABEL}" ]]; then
@@ -91,8 +93,8 @@ else
   echo "Not found. Proceeding with automatic labeling."
   # Generate labeled segmentation
   sct_label_vertebrae -i ${FILE} -s "${FILESEG}" -c ${CONTRAST} -qc "${PATH_QC}" -qc-subject "${SUBJECT}"
-  mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled_discs.nii.gz" "${FILELABEL}"
-  rm "${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled.nii.gz"
+  mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask_labeled_discs.nii.gz" "${FILELABEL}"
+  rm "${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask_labeled.nii.gz"
 fi
 
 

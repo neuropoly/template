@@ -127,38 +127,29 @@ With:
 ### 1.4 Quality control (QC) labels
 
 * Spinal cord segmentation (or centerlines) and disc labels can be displayed by opening: `/PATH_OUT/qc/index.html`;
-* Quality control (QC) segmentation and labels using [SCT's web-based HTML QC report](https://spinalcordtoolbox.com/overview/concepts/inspecting-results-qc-fsleyes.html#how-do-i-use-the-qc-report), and download YML files of data to be corrected.
+* Quality control (QC) segmentation and labels using [SCT's web-based HTML QC report](https://spinalcordtoolbox.com/overview/concepts/inspecting-results-qc-fsleyes.html#how-do-i-use-the-qc-report), and download YML files (`qc_fail.yml`) of data to be corrected.
 
 ### 1.5 Manual correction
 
-* Manually correct files when correction is needed using the [SCT manual correction](https://github.com/spinalcordtoolbox/manual-correction) repository;
-* See [tutorial](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) for tips on how to QC and fix segmentation (or centerline) and/or disc labels manually.
-
-### 1.6 Copy the non-corrected and corrected files back in the input dataset, according to the BIDS convention
+Manually correct files when correction is needed, following the [SCT manual correction](https://github.com/spinalcordtoolbox/manual-correction) repository:
+* Installation of `manual-correction`
+* `manual_correction.py` script:
 ```
-path_data='/from/configuration/json/file/'
-suffix_image='/from/configuration/json/file/'
-data_type='/from/configuration/jsonfile/'
-PATH_OUT='/path/to/outputs/from/segmentation/and/labeling'
-
-cd ${PATH_OUT}/data_processed
-
-# make BIDS-compatible directories in which to store labels
-for sub in *${suffix_image}.nii.gz; do mkdir -p ${path_data}/derivatives/labels/$(basename $sub ${suffix_image}.nii.gz)/${data_type}; done
-
-# copy SC segmentations into your dataset, according to BIDS convention
-for sub in *${suffix_image}_label-SC_seg.nii.gz; do cp ${sub} ${path_data}/derivatives/labels/$(basename $sub ${suffix_image}_label-SC_seg.nii.gz)/${data_type}; done
-
-# copy vertebral disc labels into your dataset, according to BIDS convention
-for sub in *${suffix_image}_label-disc.nii.gz; do cp ${sub} ${path_data}/derivatives/labels/$(basename $sub ${suffix_image}_label-disc.nii.gz)/${data_type}/${sub}; done
+python manual_correction.py -path-img PATH_OUT/data_processed -suffix-files-seg '_label-SC_mask' -suffix-files-seg '_label-SC_mask' -suffix-files-label '_labels-disc' -config path/to/qc_fail.yml
 ```
-With:
+* `copy_files_to_derivatives.py` script:
+```
+python copy_files_to_derivatives.py -path-in PATH_OUT/data_processed/derivatives/labels -path-out path_data/derivatives/labels
+```
+
+> **Note**
 - `path_data`: from `configuration.json` absolute path to the input [BIDS dataset](#dataset-structure).
-- `data_type`: from `configuration.json`; [BIDS data type](https://bids-standard.github.io/bids-starter-kit/folders_and_files/folders.html#datatype), same as subfolder name in dataset structure.
-- `suffix_image`: from `configuration.json`; after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`).
 - `PATH_OUT`: The location where to output the processed data, results, the logs and the QC information. Example: `/scratch/template_preproc_YYYYMMDD-HHMMSS`. Used in Step 1.3.
 
-### 1.7 Normalize spinal cord across subjects
+> **Note**
+> See [tutorial](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) for tips on how to QC and fix segmentation (or centerline) and/or disc labels manually.
+
+### 1.6 Normalize spinal cord across subjects
 
 `preprocess_normalize.py` contains several functions to normalize the spinal cord across subjects, in preparation for template generation. More specifically:
 * Extracting the spinal cord centerline and computing the vertebral distribution along the spinal cord, for all subjects.
@@ -172,7 +163,7 @@ Run:
 python preprocess_normalize.py configuration.json
 ```
 
-### 1.8 Quality control (QC) spinal cord normalization across subjects
+### 1.9 Quality control (QC) spinal cord normalization across subjects
 
 One the preprocessing is performed, please check your data. The preprocessing results should be a series of straight images registered in the same space, with all the vertebral levels aligned with each others.
 
