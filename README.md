@@ -163,7 +163,7 @@ Run:
 python preprocess_normalize.py configuration.json
 ```
 
-### 1.9 Quality control (QC) spinal cord normalization across subjects
+### 1.7 QC of spinal cord normalization
 
 One the preprocessing is performed, please check your data. The preprocessing results should be a series of straight images registered in the same space, with all the vertebral levels aligned with each others.
 
