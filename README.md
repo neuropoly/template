@@ -143,7 +143,7 @@ python copy_files_to_derivatives.py -path-in PATH_OUT/data_processed/derivatives
 ```
 
 > **Note**
-- `path_data`: from `configuration.json` absolute path to the input [BIDS dataset](#dataset-structure).
+- `PATH_DATA`: from `configuration.json` absolute path to the input [BIDS dataset](#dataset-structure).
 - `PATH_OUT`: The location where to output the processed data, results, the logs and the QC information. Example: `/scratch/template_preproc_YYYYMMDD-HHMMSS`. Used in Step 1.3.
 
 > **Note**
