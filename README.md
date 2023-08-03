@@ -126,7 +126,7 @@ With:
 
 ### 1.4 Quality control (QC) labels
 
-* Spinal cord segmentation (or centerlines) and disc labels can be displayed by opening: `/PATH_OUT/qc/index.html`;
+* Spinal cord segmentation (or centerlines) and disc labels can be displayed by opening: `PATH_OUT/qc/index.html`;
 * Quality control (QC) segmentation and labels using [SCT's web-based HTML QC report](https://spinalcordtoolbox.com/overview/concepts/inspecting-results-qc-fsleyes.html#how-do-i-use-the-qc-report), and download YML files (`qc_fail.yml`) of data to be corrected.
 
 ### 1.5 Manual correction
