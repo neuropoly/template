@@ -139,7 +139,7 @@ python manual_correction.py -path-img PATH_OUT/data_processed -suffix-files-seg 
 ```
 * `copy_files_to_derivatives.py` script:
 ```
-python copy_files_to_derivatives.py -path-in PATH_OUT/data_processed/derivatives/labels -path-out path_data/derivatives/labels
+python copy_files_to_derivatives.py -path-in PATH_OUT/data_processed/derivatives/labels -path-out PATH_DATA/derivatives/labels
 ```
 
 > **Note**
