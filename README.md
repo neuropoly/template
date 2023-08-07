@@ -11,7 +11,7 @@ Framework for creating MRI templates of the spinal cord. The framework has two d
 ### [Spinal Cord Toolbox (SCT)](https://spinalcordtoolbox.com/)
 
 Installation instructions can be found [here](https://spinalcordtoolbox.com/user_section/installation.html).
-For the following repository, we used SCT in developper mode (commit `e740edf4c8408ffa44ef7ba23ad068c6d07e4b87`).
+For the following repository, we used SCT in developper mode (commit `49a40673e6d1521eb7c2d1d6d7b338ab6811448d`).
 
 ### [ANIMAL registration framework](https://github.com/vfonov/nist_mni_pipelines)
 
@@ -83,7 +83,7 @@ This pipeline includes the following steps:
 
 ### 1.1 Install SCT
 
-SCT is used for all preprocessing steps. The current version of the pipeline uses SCT development version (commit `e740edf4c8408ffa44ef7ba23ad068c6d07e4b87`) as we prepare for the release of SCT 6.0.
+SCT is used for all preprocessing steps. The current version of the pipeline uses SCT development version (commit `49a40673e6d1521eb7c2d1d6d7b338ab6811448d`) as we prepare for the release of SCT 6.0.
 
 Once SCT is installed, make sure to activate SCT's virtual environment because the pipeline will use SCT's API functions.
 
