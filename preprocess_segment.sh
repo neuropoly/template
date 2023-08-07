@@ -34,8 +34,7 @@ PATH_DATA=$(echo "$json_data" | sed -n 's/.*"path_data": "\(.*\)".*/\1/p')
 DATA_TYPE=$(echo "$json_data" | sed -n 's/.*"data_type": "\(.*\)".*/\1/p')
 IMAGE_SUFFIX=$(echo "$json_data" | sed -n 's/.*"suffix_image": "\(.*\)".*/\1/p')
 CONTRAST=$(echo "$json_data" | sed -n 's/.*"contrast": "\(.*\)".*/\1/p')
-PATH_DATASET_OUTPUT="${PATH_DATA}derivatives/labels/${SUBJECT}/${DATA_TYPE}"
-mkdir -p ${PATH_DATASET_OUTPUT}
+FILE=$PATH_DATA_PROCESSED/$SUBJECT/$DATA_TYPE/${SUBJECT}${IMAGE_SUFFIX}.nii.gz
 
 # Uncomment for full verbose
 # set -v
@@ -57,45 +56,47 @@ start=`date +%s`
 sct_check_dependencies -short
 
 # Go to folder where data will be copied and processed
-cd $PATH_DATA_PROCESSED
+mkdir -p $PATH_DATA_PROCESSED/$SUBJECT/$DATA_TYPE
+mkdir -p $PATH_DATA_PROCESSED/derivatives/labels/$SUBJECT/$DATA_TYPE
+cd $PATH_DATA_PROCESSED/derivatives/labels/$SUBJECT/$DATA_TYPE
 
 # Copy source images
-rsync -avzh $PATH_DATA/$SUBJECT/$DATA_TYPE/* .
+rsync -avzh $PATH_DATA/$SUBJECT/$DATA_TYPE/${SUBJECT}${IMAGE_SUFFIX}.nii.gz $PATH_DATA_PROCESSED/$SUBJECT/$DATA_TYPE
 
 
 # Segment spinal cord (SC) if does not exist
 # ======================================================================================================================
 
-FILE="${SUBJECT}${IMAGE_SUFFIX}.nii.gz"
-FILESEG="${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg.nii.gz"
+FILESEG="${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask.nii.gz"
 
 echo "Looking for segmentation: ${FILESEG}"
-if [[ -e "${PATH_DATASET_OUTPUT}/${FILESEG}" ]]; then
+if [[ -e "${FILESEG}" ]]; then
   echo "Found! Using SC segmentation that exists."
-  sct_qc -i ${FILE} -s "${PATH_DATASET_OUTPUT}/${FILESEG}" -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
+  sct_qc -i ${FILE} -s "${FILESEG}" -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
 else
   echo "Not found. Proceeding with automatic segmentation."
   # Segment spinal cord
   sct_deepseg_sc -i ${FILE} -o ${FILESEG} -c ${CONTRAST} -qc ${PATH_QC} -qc-subject ${SUBJECT}
-  mv ${FILESEG} "${PATH_DATASET_OUTPUT}/${FILESEG}"
 fi
+
 
 # Label discs if do not exist
 # ======================================================================================================================
 
-FILELABEL="${SUBJECT}${IMAGE_SUFFIX}_label-disc.nii.gz"
+FILELABEL="${SUBJECT}${IMAGE_SUFFIX}_labels-disc.nii.gz"
 
 echo "Looking for disc labels: ${FILELABEL}"
-if [[ -e "${PATH_DATASET_OUTPUT}/${FILELABEL}" ]]; then
+if [[ -e "${FILELABEL}" ]]; then
   echo "Found! Using vertebral labels that exist."
-  sct_qc -i ${FILE} -s "${PATH_DATASET_OUTPUT}/${FILELABEL}" -p sct_label_vertebrae -qc ${PATH_QC} -qc-subject ${SUBJECT}
+  sct_qc -i ${FILE} -s "${FILELABEL}" -p sct_label_vertebrae -qc ${PATH_QC} -qc-subject ${SUBJECT}
 else
   echo "Not found. Proceeding with automatic labeling."
   # Generate labeled segmentation
-  sct_label_vertebrae -i ${FILE} -s "${PATH_DATASET_OUTPUT}/${FILESEG}" -ofolder ${PATH_DATASET_OUTPUT} -c ${CONTRAST} -qc "${PATH_QC}" -qc-subject "${SUBJECT}"
-  mv "${PATH_DATASET_OUTPUT}/${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled_discs.nii.gz" "${PATH_DATASET_OUTPUT}/${FILELABEL}"
-  rm "${PATH_DATASET_OUTPUT}/${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled.nii.gz"
+  sct_label_vertebrae -i ${FILE} -s "${FILESEG}" -c ${CONTRAST} -qc "${PATH_QC}" -qc-subject "${SUBJECT}"
+  mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask_labeled_discs.nii.gz" "${FILELABEL}"
+  rm "${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask_labeled.nii.gz"
 fi
+
 
 # Verify presence of output files and write log file if error
 # ======================================================================================================================
@@ -104,10 +105,11 @@ FILES_TO_CHECK=(
   "$FILELABEL"
 )
 for file in "${FILES_TO_CHECK[@]}"; do
-  if [ ! -e "${PATH_DATASET_OUTPUT}/${file}" ]; then
-    echo "${PATH_DATASET_OUTPUT}/${file} does not exist" >> "${PATH_LOG}/error.log"
+  if [ ! -e "${file}" ]; then
+    echo "${file} does not exist" >> "${PATH_LOG}/error.log"
   fi
 done
+
 
 # Display useful info for the log
 # ======================================================================================================================

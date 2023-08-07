@@ -11,7 +11,7 @@ Framework for creating MRI templates of the spinal cord. The framework has two d
 ### [Spinal Cord Toolbox (SCT)](https://spinalcordtoolbox.com/)
 
 Installation instructions can be found [here](https://spinalcordtoolbox.com/user_section/installation.html).
-For the following repository, we used SCT in developper mode (commit `e740edf4c8408ffa44ef7ba23ad068c6d07e4b87`).
+For the following repository, we used SCT in developper mode (commit `49a40673e6d1521eb7c2d1d6d7b338ab6811448d`).
 
 ### [ANIMAL registration framework](https://github.com/vfonov/nist_mni_pipelines)
 
@@ -62,28 +62,28 @@ dataset/
     └── labels
         └── sub-03
             └── anat
-                └── sub-03_T1w_label-SC_seg.nii.gz  <-- Spinal cord segmentation; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
-                └── sub-03_T1w_label-disc.nii.gz  <---- Disc labels; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
-                └── sub-03_T2w_label-SC_seg.nii.gz
-                └── sub-03_T2w_label-disc.nii.gz
+                └── sub-03_T1w_label-SC_mask.nii.gz  <-- Spinal cord segmentation; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
+                └── sub-03_T1w_labels-disc.nii.gz  <---- Disc labels; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
+                └── sub-03_T2w_label-SC_mask.nii.gz
+                └── sub-03_T2w_labels-disc.nii.gz
 ```
 
 
 ## Step 1. Data preprocessing
 
 This pipeline includes the following steps:
-1. Install SCT
-2. Edit configuration file
-3. Segment spinal cord and vertebral discs
-4. Quality control (QC) segmentation and labels using SCT's web-based HTML QC report, and download YML files of data to be corrected
-5. Manually correct files when correction is needed using https://github.com/spinalcordtoolbox/manual-correction
-6. Copy the non-corrected and corrected files back in the input dataset
-7. Normalize spinal cord across subjects
+1. Install SCT;
+2. Edit configuration file;
+3. Segment spinal cord and vertebral discs;
+4. Quality control (QC) segmentation and labels using SCT's web-based HTML QC report, and download YML files of data to be corrected;
+5. Manually correct files when correction is needed using the [SCT manual correction](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) repository;
+6. Copy the non-corrected and corrected files back in the input dataset;
+7. Normalize spinal cord across subjects;
 8. Quality control (QC) spinal cord normalization across subjects.
 
 ### 1.1 Install SCT
 
-SCT is used for all preprocessing steps. The current version of the pipeline uses SCT development version (commit `e740edf4c8408ffa44ef7ba23ad068c6d07e4b87`) as we prepare for the release of SCT 6.0.
+SCT is used for all preprocessing steps. The current version of the pipeline uses SCT development version (commit `49a40673e6d1521eb7c2d1d6d7b338ab6811448d`) as we prepare for the release of SCT 6.0.
 
 Once SCT is installed, make sure to activate SCT's virtual environment because the pipeline will use SCT's API functions.
 
@@ -126,11 +126,30 @@ With:
 
 ### 1.4 Quality control (QC) labels
 
-* Spinal cord segmentation (or centerlines) and disc labels can be displayed by opening: `/PATH_OUT/qc/index.html`
-* See [tutorial](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) for tips on how to QC and fix segmentation (or centerline) and/or disc labels manually.
+* Spinal cord segmentation (or centerlines) and disc labels can be displayed by opening: `PATH_OUT/qc/index.html`;
+* Quality control (QC) segmentation and labels using [SCT's web-based HTML QC report](https://spinalcordtoolbox.com/overview/concepts/inspecting-results-qc-fsleyes.html#how-do-i-use-the-qc-report), and download YML files (`qc_fail.yml`) of data to be corrected.
 
+### 1.5 Manual correction
 
-### 1.5 Normalize spinal cord across subjects
+Manually correct files when correction is needed, following the [SCT manual correction](https://github.com/spinalcordtoolbox/manual-correction) repository:
+* Installation of `manual-correction`
+* `manual_correction.py` script:
+```
+python manual_correction.py -path-img PATH_OUT/data_processed -suffix-files-seg '_label-SC_mask' -suffix-files-label '_labels-disc' -config path/to/qc_fail.yml
+```
+* `copy_files_to_derivatives.py` script:
+```
+python copy_files_to_derivatives.py -path-in PATH_OUT/data_processed/derivatives/labels -path-out PATH_DATA/derivatives/labels
+```
+
+> **Note**
+- `PATH_DATA`: from `configuration.json` absolute path to the input [BIDS dataset](#dataset-structure).
+- `PATH_OUT`: The location where to output the processed data, results, the logs and the QC information. Example: `/scratch/template_preproc_YYYYMMDD-HHMMSS`. Used in Step 1.3.
+
+> **Note**
+> See [tutorial](https://spinalcordtoolbox.com/user_section/tutorials/registration-to-template/vertebral-labeling.html) for tips on how to QC and fix segmentation (or centerline) and/or disc labels manually.
+
+### 1.6 Normalize spinal cord across subjects
 
 `preprocess_normalize.py` contains several functions to normalize the spinal cord across subjects, in preparation for template generation. More specifically:
 * Extracting the spinal cord centerline and computing the vertebral distribution along the spinal cord, for all subjects.
@@ -144,7 +163,7 @@ Run:
 python preprocess_normalize.py configuration.json
 ```
 
-### 1.6 Quality control (QC) spinal cord normalizatio across subjects
+### 1.7 QC of spinal cord normalization
 
 One the preprocessing is performed, please check your data. The preprocessing results should be a series of straight images registered in the same space, with all the vertebral levels aligned with each others.
 
