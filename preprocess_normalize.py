@@ -100,7 +100,7 @@ def read_dataset(fname_json = 'configuration.json', path_data = './'):
     with open(fname_json) as data_file: dataset_info = json.load(data_file)
 
     error = ''
-    key_list = ["path_data", "include-list", "data_type", "contrast", "suffix_image", "first_disc", "last_disc"]
+    key_list = ["path_data", "include-list", "data_type", "contrast", "suffix_image", "last_disc"]
 
     for key in key_list:
         if key not in dataset_info.keys(): error += 'Dataset configuration file ' + fname_json + ' must contain the field ' + key + '.\n'
