@@ -140,7 +140,7 @@ def generate_centerline(dataset_info, algo_fitting = 'linear', smooth = 50, degr
         else:
             print(subject_name + ' SC segmentation does not exist. Extracting centerline from ' + fname_image)
             im_seg = Image(fname_image).change_orientation('RPI')
-            param_centerline = ParamCenterline(algo_fitting = 'optic', smooth = smooth, degree = 5, minmax = minmax)
+            param_centerline = ParamCenterline(algo_fitting = 'optic', smooth = smooth, degree = 5, minmax = minmax, contrast = dataset_info['contrast'])
 
         # extracting intervertebral discs
         im_discs = Image(fname_image_discs).change_orientation('RPI')
