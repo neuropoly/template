@@ -64,6 +64,7 @@ dataset/
             └── anat
                 └── sub-03_T1w_label-SC_mask.nii.gz  <-- Spinal cord segmentation; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
                 └── sub-03_T1w_labels-disc.nii.gz  <---- Disc labels; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
+                └── sub-03_T1w_label-centerline.nii.gz  <-- Spinal cord centerline; `_T1w` can be replaced by the value of `suffix_image` in configuration.json
                 └── sub-03_T2w_label-SC_mask.nii.gz
                 └── sub-03_T2w_labels-disc.nii.gz
 ```
