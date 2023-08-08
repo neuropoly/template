@@ -23,6 +23,7 @@ The data are expected to be located according to the following file structure:
         │   └── anat
         │       │──sub-XXX_T1w_label-SC_mask.nii.gz  <---- spinal cord segmentation
         │       └──sub-XXX_T1w_labels-disc.nii.gz  <---- disc labels
+        |       └──sub-XXX_T1w_label-centerline.nii.gz  <---- spinal cord centerline
         ...
 
 Usage: `python preprocess_normalize.py configuration.json`
