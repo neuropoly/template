@@ -23,6 +23,7 @@ The data are expected to be located according to the following file structure:
         │   └── anat
         │       │──sub-XXX_T1w_label-SC_mask.nii.gz  <---- spinal cord segmentation
         │       └──sub-XXX_T1w_labels-disc.nii.gz  <---- disc labels
+        |       └──sub-XXX_T1w_label-centerline.nii.gz  <---- spinal cord centerline
         ...
 
 Usage: `python preprocess_normalize.py configuration.json`
@@ -132,15 +133,21 @@ def generate_centerline(dataset_info, algo_fitting = 'linear', smooth = 50, degr
         fname_image = path_data + subject_name + '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '.nii.gz'
         fname_image_seg = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-SC_mask.nii.gz'
         fname_image_discs = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_labels-disc.nii.gz'
-
+        fname_image_centerline = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-centerline.nii.gz'
+        
         if os.path.isfile(fname_image_seg):
             print(subject_name + ' SC segmentation exists. Extracting centerline from ' + fname_image_seg)
             im_seg = Image(fname_image_seg).change_orientation('RPI')
             param_centerline = ParamCenterline(algo_fitting = algo_fitting, smooth = smooth, degree = degree, minmax = minmax) 
+        if os.path.isfile(fname_image_centerline):
+            print(subject_name + ' centerline exists. Extracting centerline from ' + fname_image_centerline)
+            im_seg = Image(fname_image_centerline).change_orientation('RPI')
+            param_centerline = ParamCenterline(algo_fitting = algo_fitting, smooth = smooth, degree = degree, minmax = minmax) 
         else:
             print(subject_name + ' SC segmentation does not exist. Extracting centerline from ' + fname_image)
+            native_orientation = Image(fname_image).orientation
             im_seg = Image(fname_image).change_orientation('RPI')
-            param_centerline = ParamCenterline(algo_fitting = 'optic', smooth = smooth, degree = 5, minmax = minmax)
+            param_centerline = ParamCenterline(algo_fitting = 'optic', smooth = smooth, degree = 5, minmax = minmax, contrast = dataset_info['contrast'])
 
         # extracting intervertebral discs
         im_discs = Image(fname_image_discs).change_orientation('RPI')
@@ -153,9 +160,13 @@ def generate_centerline(dataset_info, algo_fitting = 'linear', smooth = 50, degr
                 coord_physical.append(c_p)
 
         # extracting centerline
-        _, arr_ctl, arr_ctl_der, _ = get_centerline(im_seg, param = param_centerline, space = 'phys')
+        im_centerline, arr_ctl, arr_ctl_der, _ = get_centerline(im_seg, param = param_centerline, space = 'phys')
         centerline = Centerline(points_x = arr_ctl[0], points_y = arr_ctl[1], points_z = arr_ctl[2], deriv_x = arr_ctl_der[0], deriv_y = arr_ctl_der[1], deriv_z = arr_ctl_der[2])
         centerline.compute_vertebral_distribution(coord_physical)
+
+        # save centerline as NIFTI file if subject's SC mask does not exist (needed for straighten_all_subjects() below)
+        if not os.path.isfile(fname_image_seg) and not os.path.isfile(fname_image_centerline):
+            im_centerline.change_orientation(native_orientation).save(fname_image_centerline)
 
         list_centerline.append(centerline)
         tqdm_bar.update(1)
