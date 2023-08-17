@@ -98,7 +98,7 @@ conda activate venv_sct
 Copy the file `configuration_default.json` and rename it as `configuration.json`. Edit it and modify according to your setup:
 
 - `path_data`: Absolute path to the input [BIDS dataset](#dataset-structure); the path should end with `/`.
-- `include-list`: List of subjects to include in the preprocessing, separated with a space.
+- `include_list`: List of subjects to include in the preprocessing, separated with a space.
 - `data_type`: [BIDS data type](https://bids-standard.github.io/bids-starter-kit/folders_and_files/folders.html#datatype), same as subfolder name in dataset structure. Typically, it should be "anat".
 - `contrast`: Contrast to be used by `sct_deepseg_sc` function.
 - `suffix_image`: Suffix for image data, after subject ID but before file extension (e.g. `_rec-composed_T1w` in `sub-101_rec-composed_T1w.nii.gz`).
@@ -115,15 +115,14 @@ Copy the file `configuration_default.json` and rename it as `configuration.json`
 
 Run script:
 ```
-sct_run_batch -script preprocess_segment.sh -config configuration.json -include-list sub-001 sub-002 sub-003 -path-output PATH_OUT -jobs N_CPU
+sct_run_batch -script preprocess_segment.sh -config configuration.json -path-output PATH_OUT -jobs N_CPU -script-args configuration.json
 ```
+> **Note**
+> The value `configuration.json` should be the same from both the flags `-config` and `-script-args`.
 
 With:
 - `PATH_OUT`: The location where to output the processed data, results, the logs and the QC information. Example: `/scratch/template_preproc_YYYYMMDD-HHMMSS`. This is a temporary directory in that it is only needed to QC your labels. It therefore cannot be stored inside `path_data`.
 - `N_CPU`: The number of CPU cores to dedicate to this task (one subject will be process per core).
-
-> **Note**
-> Copy-paste the values to the `include-list` key from `configuration.json` to go after `-include-list` option here.
 
 ### 1.4 Quality control (QC) labels
 
