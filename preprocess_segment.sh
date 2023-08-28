@@ -9,13 +9,36 @@
 # Example:
 #   ./process_data.sh sub-03
 #
-# Author: Julien Cohen-Adad (modified by Nadia Blostein)
+# Author: Julien Cohen-Adad (modified by Nadia Blostein and Rohan Banerjee)
+
+
+# Uncomment for full verbose
+set -x
+
+# Immediately exit if error
+set -e -o pipefail
+
+# Exit if user presses CTRL+C (Linux) or CMD+C (OSX)
+trap "echo Caught Keyboard Interrupt within script. Exiting now.; exit" INT
+
+SUBJECT=$1
+CONFIG=$2
+
+# Print retrieved variables from the sct_run_batch script to the log (to allow easier debug)
+echo "Retrieved variables from from the caller sct_run_batch:"
+echo "PATH_DATA: ${PATH_DATA}"
+echo "PATH_DATA_PROCESSED: ${PATH_DATA_PROCESSED}"
+echo "PATH_RESULTS: ${PATH_RESULTS}"
+echo "PATH_LOG: ${PATH_LOG}"
+echo "PATH_QC: ${PATH_QC}"
+echo "SUBJECT: ${SUBJECT}"
+echo "CONFIG FILE PATH: ${CONFIG}"
 
 
 # Parsing .json file (`configuration.json`)
 # ======================================================================================================================
+json_file=$CONFIG
 
-json_file="configuration.json"
 # Check if the JSON file exists
 if [ ! -f "$json_file" ]; then
   echo "JSON file not found: $json_file"
@@ -29,7 +52,6 @@ json_data=$(cat "$json_file")
 # Global parameters & Bash settings
 # ======================================================================================================================
 
-SUBJECT=$1
 PATH_DATA=$(echo "$json_data" | sed -n 's/.*"path_data": "\(.*\)".*/\1/p')
 DATA_TYPE=$(echo "$json_data" | sed -n 's/.*"data_type": "\(.*\)".*/\1/p')
 IMAGE_SUFFIX=$(echo "$json_data" | sed -n 's/.*"suffix_image": "\(.*\)".*/\1/p')
@@ -68,41 +90,21 @@ rsync -avzh $PATH_DATA/$SUBJECT/$DATA_TYPE/${SUBJECT}${IMAGE_SUFFIX}.nii.gz $PAT
 # ======================================================================================================================
 
 FILESEG="${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask.nii.gz"
-
-echo "Looking for segmentation: ${FILESEG}"
-if [[ -e "${FILESEG}" ]]; then
-  echo "Found! Using SC segmentation that exists."
-  sct_qc -i ${FILE} -s "${FILESEG}" -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
-else
-  echo "Not found. Proceeding with automatic segmentation."
-  # Segment spinal cord
-  sct_deepseg_sc -i ${FILE} -o ${FILESEG} -c ${CONTRAST} -qc ${PATH_QC} -qc-subject ${SUBJECT}
-fi
-
+sct_deepseg_sc -i ${FILE} -o ${FILESEG} -c ${CONTRAST} -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
 # Label discs if do not exist
 # ======================================================================================================================
 
-FILELABEL="${SUBJECT}${IMAGE_SUFFIX}_labels-disc.nii.gz"
-
-echo "Looking for disc labels: ${FILELABEL}"
-if [[ -e "${FILELABEL}" ]]; then
-  echo "Found! Using vertebral labels that exist."
-  sct_qc -i ${FILE} -s "${FILELABEL}" -p sct_label_vertebrae -qc ${PATH_QC} -qc-subject ${SUBJECT}
-else
-  echo "Not found. Proceeding with automatic labeling."
-  # Generate labeled segmentation
-  sct_label_vertebrae -i ${FILE} -s "${FILESEG}" -c ${CONTRAST} -qc "${PATH_QC}" -qc-subject "${SUBJECT}"
-  mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask_labeled_discs.nii.gz" "${FILELABEL}"
-  rm "${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask_labeled.nii.gz"
-fi
-
+FILELABEL="${SUBJECT}${IMAGE_SUFFIX}_labeled-discs.nii.gz"
+sct_label_vertebrae -i ${FILE} -s "${FILESEG}" -c ${CONTRAST} -qc "${PATH_QC}" -qc-subject "${SUBJECT}"
+mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask_labeled_discs.nii.gz" "${FILELABEL}"
+rm "${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask_labeled.nii.gz"
 
 # Verify presence of output files and write log file if error
 # ======================================================================================================================
 FILES_TO_CHECK=(
   "$FILESEG"
-  "$FILELABEL"
+  "$FILELABEL" 
 )
 for file in "${FILES_TO_CHECK[@]}"; do
   if [ ! -e "${file}" ]; then

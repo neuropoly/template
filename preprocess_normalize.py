@@ -101,7 +101,7 @@ def read_dataset(fname_json = 'configuration.json', path_data = './'):
     with open(fname_json) as data_file: dataset_info = json.load(data_file)
 
     error = ''
-    key_list = ["path_data", "include-list", "data_type", "contrast", "suffix_image", "last_disc"]
+    key_list = ["path_data", "include_list", "data_type", "contrast", "suffix_image", "last_disc"]
 
     for key in key_list:
         if key not in dataset_info.keys(): error += 'Dataset configuration file ' + fname_json + ' must contain the field ' + key + '.\n'
@@ -121,7 +121,7 @@ def generate_centerline(dataset_info, algo_fitting = 'linear', smooth = 50, degr
     :return list of centerline objects
     """
     path_data = dataset_info['path_data']
-    list_subjects = dataset_info['include-list'].split(' ')
+    list_subjects = dataset_info['include_list'].split(' ')
     last_disc = int(dataset_info['last_disc'])
     list_centerline = []
     current_path = os.getcwd()
@@ -468,7 +468,7 @@ def straighten_all_subjects(dataset_info, normalized = False):
     """
     path_data = dataset_info['path_data']
     path_template = dataset_info['path_data'] + 'derivatives/template/'
-    list_subjects = dataset_info['include-list'].split(' ')
+    list_subjects = dataset_info['include_list'].split(' ')
 
     if not os.path.exists(dataset_info['path_data'] + 'derivatives/sct_straighten_spinalcord'): os.makedirs(dataset_info['path_data'] + 'derivatives/sct_straighten_spinalcord')
 
@@ -509,7 +509,7 @@ def normalize_intensity_template(dataset_info, verbose = 1):
     :return:
     """
     fname_template_centerline = dataset_info['path_data'] + 'derivatives/template/' + 'template_label-centerline.npz'
-    list_subjects = dataset_info['include-list'].split(' ')
+    list_subjects = dataset_info['include_list'].split(' ')
 
     average_intensity = []
     intensity_profiles = {}
@@ -616,7 +616,7 @@ def normalize_intensity_template(dataset_info, verbose = 1):
         image_new.save(fname_image_normalized)
 
 def copy_preprocessed_images(dataset_info):
-    list_subjects = dataset_info['include-list'].split(' ') 
+    list_subjects = dataset_info['include_list'].split(' ') 
     
     tqdm_bar = tqdm(total = len(list_subjects), unit = 'B', unit_scale = True, desc = "Status", ascii = True)
     
@@ -628,7 +628,7 @@ def copy_preprocessed_images(dataset_info):
 
 def create_mask_template(dataset_info):
     path_template = dataset_info['path_data'] + 'derivatives/template/'
-    subject_name = dataset_info['include-list'].split(' ')[0]
+    subject_name = dataset_info['include_list'].split(' ')[0]
 
     template_mask = Image(path_template + subject_name + dataset_info['suffix_image'] + '_straight_norm.nii.gz')
     template_mask.data *= 0.0
@@ -643,7 +643,7 @@ def create_mask_template(dataset_info):
 
 def convert_data2mnc(dataset_info):
     path_template = dataset_info['path_data'] + 'derivatives/template/'
-    list_subjects = dataset_info['include-list'].split(' ')
+    list_subjects = dataset_info['include_list'].split(' ')
 
     path_template_mask = create_mask_template(dataset_info)
 
