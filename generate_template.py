@@ -7,11 +7,11 @@ python -m scoop -n N -vvv generate_template.py
 
 from scoop import futures, shared
 
-import iplScoopGenerateModel as gm
+from ipl.model import generate_nonlinear
 
 if __name__ == '__main__':
     # setup data for parallel processing
-    gm.generate_nonlinear_model_csv('subjects.csv',
+    generate_nonlinear.generate_nonlinear_model_csv('subjects.csv',
                                     work_prefix='model_nl_all',
                                     options={'symmetric': True,
                                              'protocol': [{'iter': 4, 'level': 8},
