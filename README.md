@@ -239,6 +239,12 @@ g) Batch on Alliance Canada
 sbatch --time=24:00:00  --mem-per-cpu 4000 template_pipeline.sh # will probably require batching several times, depending on number of subjects
 ```
 
+h) Final output
+<p>After the pipeline has finished running, the `.mnc` file needs to be converted to `.nii` format in order to get the final template. The pipeline would give outputs with the name: avg.XXX.mnc, where `XXX` is the nth iteration. To convert it to the `.nii` format, run the following command:</p>
+
+```
+mnc2nii PATH_TO/avg.XXX.mnc PATH_TO/template_XXX.nii
+```
 
 ## Additional information
 
