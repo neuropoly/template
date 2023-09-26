@@ -90,34 +90,15 @@ rsync -avzh $PATH_DATA/$SUBJECT/$DATA_TYPE/${SUBJECT}${IMAGE_SUFFIX}.nii.gz $PAT
 # ======================================================================================================================
 
 FILESEG="${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask.nii.gz"
+sct_deepseg_sc -i ${FILE} -o ${FILESEG} -c ${CONTRAST} -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
-echo "Looking for segmentation: ${FILESEG}"
-if [[ -e "${FILESEG}" ]]; then
-  echo "Found! Using SC segmentation that exists."
-  sct_qc -i ${FILE} -s "${FILESEG}" -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
-else
-  echo "Not found. Proceeding with automatic segmentation."
-  # Segment spinal cord
-  sct_deepseg_sc -i ${FILE} -o ${FILESEG} -c ${CONTRAST} -qc ${PATH_QC} -qc-subject ${SUBJECT}
-fi
 # Label discs if do not exist
 # ======================================================================================================================
 
-FILELABEL="${SUBJECT}${IMAGE_SUFFIX}_labels-disc.nii.gz"
-
- echo "Looking for disc labels: ${FILELABEL}"
-if [[ -e "${FILELABEL}" ]]; then
-  echo "Found! Using vertebral labels that exist."
-  sct_qc -i ${FILE} -s "${FILELABEL}" -p sct_label_vertebrae -qc ${PATH_QC} -qc-subject ${SUBJECT}
-else
-  echo "Not found. Proceeding with automatic labeling."
-  # Generate labeled segmentation
-  sct_label_vertebrae -i ${FILE} -s "${FILESEG}" -c ${CONTRAST} -qc "${PATH_QC}" -qc-subject "${SUBJECT}"
-  mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled_discs.nii.gz" "${FILELABEL}"
-  rm "${SUBJECT}${IMAGE_SUFFIX}_label-SC_seg_labeled.nii.gz"
-  mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask_labeled_discs.nii.gz" "${FILELABEL}"
-  rm "${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask_labeled.nii.gz"
-fi
+FILELABEL="${SUBJECT}${IMAGE_SUFFIX}_labeled-discs.nii.gz"
+sct_label_vertebrae -i ${FILE} -s "${FILESEG}" -c ${CONTRAST} -qc "${PATH_QC}" -qc-subject "${SUBJECT}"
+mv "${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask_labeled_discs.nii.gz" "${FILELABEL}"
+rm "${SUBJECT}${IMAGE_SUFFIX}_label-SC_mask_labeled.nii.gz"
 
 # Verify presence of output files and write log file if error
 # ======================================================================================================================
