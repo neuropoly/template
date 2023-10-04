@@ -24,10 +24,10 @@ Installation:
 
 Add the following lines to you `~/.bashrc` (change the path): 
 ```
-export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines"
-export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines/"
-export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines/ipl/"
-export PYTHONPATH="${PYTHONPATH}:path/to/nist_mni_pipelines/ipl"
+export PYTHONPATH="${PYTHONPATH}:PATH_TO_NIST_MNI_PIPELINES"
+export PYTHONPATH="${PYTHONPATH}:PATH_TO_NIST_MNI_PIPELINES/"
+export PYTHONPATH="${PYTHONPATH}:PATH_TO_NIST_MNI_PIPELINES/ipl/"
+export PYTHONPATH="${PYTHONPATH}:PATH_TO_NIST_MNI_PIPELINES/ipl"
 ```
 
 ### [Minc Toolkit v2](http://bic-mni.github.io/)
@@ -38,7 +38,7 @@ You will also need to install `scoop` with: `pip install scoop`
 
 On macOs, you may need to recompile Minc Toolkit from source to make sure all libraires are linked correctly.
 
-On Linux: TODO
+On Linux, follow the instructions in the official link above. If you are using Alliance Canada, simply run: `module load minc-toolkit/1.9.18`
 
 ### [minc2_simple](https://github.com/vfonov/minc2-simple)
 
@@ -185,44 +185,66 @@ python -m scoop -n N -vvv generate_template.py
 
 It is recommended to run the template generation on a large cluster. If you are in Canada, you could make use of [the Alliance](https://alliancecan.ca/en) (formerly Compute Canada), which is a bunch of CPU nodes accessible to researchers in Canada. **Once the preprocessing is complete**, you will generate the template with `generate_template.py`. This will require minctoolkit v2, minc2simple and nist-mni-pipelines. The easiest way to set up is to use Compute Canada and set up your virtual environment (without spinal cord toolbox, since your data should have already been preprocessed by now) as follows:
 
-a) Load the right modules and install packages from pip wheel
+a) Copy the dataset folder from your local machine to the cluster
+You can either drag and drop the folder from your local machine to the cluster, or use the following command:
+```
+scp PATH_TO_FOLDER_LOCAL USERNAME@CLUSTER_NAME.computecanada.ca:PATH_TO_FOLDER_CLUSTER
+```
+
+b) Create a virtual environment
+```
+virtualenv --no-download ~/template_env
+source ~/template_env/bin/activate
+```
+
+c) Load the right modules and install packages from pip wheel
 ```
 module load StdEnv/2020  gcc/9.3.0 minc-toolkit/1.9.18.1 python/3.8.10
 pip install --upgrade pip
 pip install scoop
 ```
 
-b) Set up NIST-MNI pipelines
+d) Set up NIST-MNI pipelines
 ```
+git clone https://github.com/neuropoly/template.git
+cd template
 git clone https://github.com/vfonov/nist_mni_pipelines.git
 nano ~/.bashrc
 ```
 add the following:
 ```
-export PYTHONPATH="${PYTHONPATH}:/path/to/nist_mni_pipelines"
-export PYTHONPATH="${PYTHONPATH}:/path/to/nist_mni_pipelines/"
-export PYTHONPATH="${PYTHONPATH}:/path/to/nist_mni_pipelines/ipl/"
-export PYTHONPATH="${PYTHONPATH}:/path/to/nist_mni_pipelines/ipl"
+export PYTHONPATH="${PYTHONPATH}:PATH_TO_NIST_MNI_PIPELINES"
+export PYTHONPATH="${PYTHONPATH}:PATH_TO_NIST_MNI_PIPELINES/"
+export PYTHONPATH="${PYTHONPATH}:PATH_TO_NIST_MNI_PIPELINES/ipl/"
+export PYTHONPATH="${PYTHONPATH}:PATH_TO_NIST_MNI_PIPELINES/ipl"
 ```
 ```
 source ~/.bashrc
 ```
-c) Minc2simple
+e) Minc2simple
 ```
 pip install "git+https://github.com/NIST-MNI/minc2-simple.git@develop_new_build#subdirectory=python"
 ``` 
 
-d) Create `my_job.sh`
+f) Create `template_pipleline.sh` 
+> **Note:**
+> Create the `template_pipeline.sh` inside the `template` folder.
 ```
 #!/bin/bash
 python -m scoop -vvv generate_template.py
 ```
 
-e) Batch on Alliance Canada
+g) Batch on Alliance Canada
 ```
-sbatch --time=24:00:00  --mem-per-cpu 4000 my_job.sh # will probably require batching several times, depending on number of subjects
+sbatch --time=24:00:00  --mem-per-cpu 4000 template_pipeline.sh # will probably require batching several times, depending on number of subjects
 ```
 
+h) Final output
+<p>After the pipeline has finished running, the `.mnc` file needs to be converted to `.nii` format in order to get the final template. The pipeline would give outputs with the name: avg.XXX.mnc, where `XXX` is the nth iteration. To convert it to the `.nii` format, run the following command:</p>
+
+```
+mnc2nii PATH_TO/avg.XXX.mnc PATH_TO/template_XXX.nii
+```
 
 ## Additional information
 
