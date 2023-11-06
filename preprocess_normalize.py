@@ -675,7 +675,6 @@ def main(configuration_file):
     Pipeline for data processing.
     """
     dataset_info = read_dataset(configuration_file)
-    Centerline.list_labels = [50, 49] + list(range(int(dataset_info['last_disc']) + 1))
 
     # generating centerlines
     list_centerline = generate_centerline(dataset_info = dataset_info)
