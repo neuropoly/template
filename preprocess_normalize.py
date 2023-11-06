@@ -639,7 +639,7 @@ def create_mask_template(dataset_info):
     if os.path.isfile(path_template + '/template_mask.mnc'): os.remove(path_template + '/template_mask.mnc')
 
     os.system('nii2mnc ' + path_template + '/template_mask.nii.gz ' + ' ' + path_template + '/template_mask.mnc')
-    return path_template + '/template_mask.mnc'
+    return path_template + 'template_mask.mnc'
 
 def convert_data2mnc(dataset_info):
     path_template = dataset_info['path_data'] + 'derivatives/template/'
@@ -647,7 +647,7 @@ def convert_data2mnc(dataset_info):
 
     path_template_mask = create_mask_template(dataset_info)
 
-    output_list = open('subjects.csv', "w")
+    output_list = open(path_template + 'subjects.csv', "w")
     writer = csv.writer(output_list, delimiter = ',', quotechar = ',', quoting = csv.QUOTE_MINIMAL)
 
     tqdm_bar = tqdm(total = len(list_subjects), unit = 'B', unit_scale = True, desc = "Status", ascii = True)
@@ -661,7 +661,7 @@ def convert_data2mnc(dataset_info):
         os.system('nii2mnc ' + fname_nii + ' ' + fname_mnc)
         os.remove(fname_nii) # remove duplicate nifti file!
 
-        writer.writerow([fname_mnc,path_template_mask])
+        writer.writerow([fname_mnc, path_template_mask])
 
         tqdm_bar.update(1)
     tqdm_bar.close()
@@ -676,7 +676,6 @@ def main(configuration_file):
     """
     dataset_info = read_dataset(configuration_file)
     Centerline.list_labels = [50, 49] + list(range(int(dataset_info['last_disc']) + 1))
-
 
     # generating centerlines
     list_centerline = generate_centerline(dataset_info = dataset_info)
