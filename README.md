@@ -225,8 +225,9 @@ e) Minc2simple
 ```
 pip install "git+https://github.com/NIST-MNI/minc2-simple.git@develop_new_build#subdirectory=python"
 ``` 
+f) Update the absolute of the `subjects.csv` in the `generate_template.py` script. The `subjects.csv` lies inside the `DATASET/derivatives/template` directory
 
-f) Create `template_pipleline.sh` 
+g) Create `template_pipleline.sh` 
 > **Note:**
 > Create the `template_pipeline.sh` inside the `template` folder.
 ```
@@ -234,12 +235,12 @@ f) Create `template_pipleline.sh`
 python -m scoop -vvv generate_template.py
 ```
 
-g) Batch on Alliance Canada
+h) Batch on Alliance Canada
 ```
 sbatch --time=24:00:00  --mem-per-cpu 4000 template_pipeline.sh # will probably require batching several times, depending on number of subjects
 ```
 
-h) Final output
+i) Final output
 <p>After the pipeline has finished running, the `.mnc` file needs to be converted to `.nii` format in order to get the final template. The pipeline would give outputs with the name: avg.XXX.mnc, where `XXX` is the nth iteration. To convert it to the `.nii` format, run the following command:</p>
 
 ```
