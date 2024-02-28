@@ -38,7 +38,7 @@ from copy import copy
 from tqdm import tqdm
 import sys
 
-from spinalcordtoolbox import utils as sct 
+from spinalcordtoolbox.utils import sys as sct 
 from spinalcordtoolbox.types import Centerline
 from spinalcordtoolbox import straightening
 from spinalcordtoolbox.centerline.core import ParamCenterline
