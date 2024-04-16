@@ -226,7 +226,7 @@ e) Minc2simple
 pip install "git+https://github.com/NIST-MNI/minc2-simple.git@develop_new_build#subdirectory=python"
 ```
 
-f)
+f) Set environment variable `VOLUME_CACHE_THRESHOLD` to a value that's smaller then the volume size that you are using in template building
 ```
 export VOLUME_CACHE_THRESHOLD=-1
 ```
