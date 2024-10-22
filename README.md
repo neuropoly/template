@@ -209,6 +209,7 @@ d) Set up NIST-MNI pipelines
 git clone https://github.com/neuropoly/template.git
 cd template
 git clone https://github.com/vfonov/nist_mni_pipelines.git
+NOTE: Current git commit SHA of nist_mni_pipelines used for this version: cadc7219e79d6edb90742e1e340f8eee76332006
 nano ~/.bashrc
 ```
 add the following:
