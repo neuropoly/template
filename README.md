@@ -106,7 +106,7 @@ Copy the file `configuration_default.json` and rename it as `configuration.json`
 - `last_disc`: Integer value corresponding to the label of the last vertebral disc you want present in the template.
 
 > **Note**
-> Note that SCT functions treat your images with bright CSF as "T2w" (i.e. `t2` option) and dark CSF as "T1w" (i.e. `t1` option). You can therefore still use SCT even if your images are not actually T1w and T2w.
+> That SCT functions treat your images with bright CSF as "T2w" (i.e. `t2` option) and dark CSF as "T1w" (i.e. `t1` option). You can therefore still use SCT even if your images are not actually T1w and T2w.
 
 > **Note**
 > If you wish to make a template that does not align discs across subjects, please open an [issue](https://github.com/neuropoly/template/issues) and we will follow-up with you.
