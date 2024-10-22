@@ -193,6 +193,7 @@ scp PATH_TO_FOLDER_LOCAL USERNAME@CLUSTER_NAME.computecanada.ca:PATH_TO_FOLDER_C
 
 b) Create a virtual environment
 ```
+module load python
 virtualenv --no-download ~/template_env
 source ~/template_env/bin/activate
 ```
