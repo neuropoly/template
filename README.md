@@ -232,7 +232,7 @@ f) Set environment variable `VOLUME_CACHE_THRESHOLD` to a value that's smaller t
 export VOLUME_CACHE_THRESHOLD=-1
 ```
 
-g) Update the absolute of the `subjects.csv` in the `generate_template.py` script. The `subjects.csv` lies inside the `DATASET/derivatives/template` directory
+g) Update the absolute path of the `subjects.csv` in the `generate_template.py` script. The `subjects.csv` lies inside the `DATASET/derivatives/template` directory
 
 h) Create `template_pipleline.sh` 
 > **Note:**
