@@ -37,6 +37,7 @@ import csv
 from copy import copy
 from tqdm import tqdm
 import sys
+import subprocess
 
 from spinalcordtoolbox.utils import sys as sct 
 from spinalcordtoolbox.types import Centerline
@@ -490,7 +491,7 @@ def straighten_all_subjects(dataset_info, normalized = False):
         os.chdir(folder_out)
  
         # straighten centerline
-        os.system('sct_straighten_spinalcord' + 
+        subprocess.run(['sct_straighten_spinalcord' + 
             ' -i ' + fname_image + 
             ' -s ' + fname_input_seg + 
             ' -dest ' + path_template + 'template_centerline.nii.gz' + 
@@ -499,7 +500,8 @@ def straighten_all_subjects(dataset_info, normalized = False):
             ' -ofolder ' + folder_out + 
             ' -o ' + fname_out + 
             ' -disable-straight2curved' + 
-            ' -param threshold_distance=1')
+            ' -param threshold_distance=1'], check=True)
+        
         tqdm_bar.update(1)
     tqdm_bar.close()
 
@@ -638,7 +640,7 @@ def create_mask_template(dataset_info):
     # if mask already present, deleting it
     if os.path.isfile(path_template + '/template_mask.mnc'): os.remove(path_template + '/template_mask.mnc')
 
-    os.system('nii2mnc ' + path_template + '/template_mask.nii.gz ' + ' ' + path_template + '/template_mask.mnc')
+    subprocess.run(['nii2mnc ' + path_template + '/template_mask.nii.gz ' + ' ' + path_template + '/template_mask.mnc'], check=True)
     return path_template + 'template_mask.mnc'
 
 def convert_data2mnc(dataset_info):
