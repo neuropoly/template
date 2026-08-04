@@ -21,9 +21,9 @@ The data are expected to be located according to the following file structure:
     └── labels
         ├── sub-XXX
         │   └── anat
-        │       │──sub-XXX_T1w_label-SC_mask.nii.gz  <---- spinal cord segmentation
-        │       └──sub-XXX_T1w_labels-disc.nii.gz  <---- disc labels
-        |       └──sub-XXX_T1w_label-centerline.nii.gz  <---- spinal cord centerline
+        │       │──sub-XXX_T1w_label-SC_seg.nii.gz  <---- spinal cord segmentation
+        │       └──sub-XXX_T1w_labels-disc-manual.nii.gz  <---- disc labels
+        |       └──sub-XXX_T1w_centerline.nii.gz  <---- spinal cord centerline
         ...
 
 Usage: `python preprocess_normalize.py configuration.json`
@@ -131,9 +131,9 @@ def generate_centerline(dataset_info, algo_fitting = 'linear', smooth = 50, degr
     # obtaining centerline of each subject
     for subject_name in list_subjects:
         fname_image = path_data + subject_name + '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '.nii.gz'
-        fname_image_seg = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-SC_mask.nii.gz'
-        fname_image_discs = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_labels-disc.nii.gz'
-        fname_image_centerline = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-centerline.nii.gz'
+        fname_image_seg = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-SC_seg.nii.gz'
+        fname_image_discs = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_labels-disc-manual.nii.gz'
+        fname_image_centerline = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_centerline.nii.gz'
         
         if os.path.isfile(fname_image_seg):
             print(subject_name + ' SC segmentation exists. Extracting centerline from ' + fname_image_seg)
@@ -429,8 +429,8 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
         coord_pix = image_centerline.transfo_phys2pix([coord])[0]
         if 0 <= coord_pix[0] < image_centerline.data.shape[0] and 0 <= coord_pix[1] < image_centerline.data.shape[1] and 0 <= coord_pix[2] < image_centerline.data.shape[2]:
             image_centerline.data[int(coord_pix[0]), int(coord_pix[1]), int(coord_pix[2])] = 1
-    image_centerline.save(path_template + 'template_label-centerline.nii.gz', dtype = 'float32')
-    print(f'\nSaving template centerline in {template_space.orientation} orientation as {path_template}template_label-centerline.nii.gz\n')
+    image_centerline.save(path_template + 'template_centerline.nii.gz', dtype = 'float32')
+    print(f'\nSaving template centerline in {template_space.orientation} orientation as {path_template}template_centerline.nii.gz\n')
 
     # generate template discs position
     coord_physical = []
@@ -448,8 +448,8 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
         else:
             sct.printv(str(coord_pix))
             sct.printv('ERROR: the disc label ' + str(disc) + ' is not in the template image.')
-    image_discs.save(path_template + 'template_labels-disc.nii.gz', dtype = 'uint8')
-    print(f'\nSaving disc positions in {image_discs.orientation} orientation as {path_template}template_labels-disc.nii.gz\n')
+    image_discs.save(path_template + 'template_labels-disc-manual.nii.gz', dtype = 'uint8')
+    print(f'\nSaving disc positions in {image_discs.orientation} orientation as {path_template}template_labels-disc-manual.nii.gz\n')
 
     # generate template centerline as a npz file
     param_centerline = ParamCenterline(algo_fitting = algo_fitting, smooth = smooth, degree = degree, minmax = minmax) 
@@ -457,8 +457,8 @@ def generate_initial_template_space(dataset_info, points_average_centerline, pos
     _, arr_ctl, arr_ctl_der, _ = get_centerline(image_centerline, param = param_centerline, space = 'phys')
     centerline_template = Centerline(points_x = arr_ctl[0], points_y = arr_ctl[1], points_z = arr_ctl[2], deriv_x = arr_ctl_der[0], deriv_y = arr_ctl_der[1], deriv_z = arr_ctl_der[2])
     centerline_template.compute_vertebral_distribution(coord_physical)
-    centerline_template.save_centerline(fname_output = path_template + 'template_label-centerline')
-    print(f'\nSaving template centerline as .npz file (saves all Centerline object information, not just coordinates) as {path_template}template_label-centerline.npz\n')
+    centerline_template.save_centerline(fname_output = path_template + 'template_centerline')
+    print(f'\nSaving template centerline as .npz file (saves all Centerline object information, not just coordinates) as {path_template}template_centerline.npz\n')
 
 def straighten_all_subjects(dataset_info, normalized = False):
     """
@@ -479,9 +479,9 @@ def straighten_all_subjects(dataset_info, normalized = False):
         if not os.path.exists(folder_out): os.makedirs(folder_out)
         
         fname_image = path_data + subject_name + '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '.nii.gz'
-        fname_image_seg = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-SC_mask.nii.gz'
-        fname_image_discs = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_labels-disc.nii.gz'
-        fname_image_centerline =  path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-centerline.nii.gz'
+        fname_image_seg = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_label-SC_seg.nii.gz'
+        fname_image_discs = path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_labels-disc-manual.nii.gz'
+        fname_image_centerline =  path_data + 'derivatives/labels/' + subject_name +  '/' + dataset_info['data_type'] + '/' + subject_name + dataset_info['suffix_image'] + '_centerline.nii.gz'
         fname_out = subject_name + dataset_info['suffix_image'] + '_straight_norm.nii.gz' if normalized else subject_name + dataset_info['suffix_image'] + '_straight.nii.gz' 
 
         fname_input_seg = fname_image_seg if os.path.isfile(fname_image_seg) else fname_image_centerline
@@ -493,9 +493,9 @@ def straighten_all_subjects(dataset_info, normalized = False):
         os.system('sct_straighten_spinalcord' + 
             ' -i ' + fname_image + 
             ' -s ' + fname_input_seg + 
-            ' -dest ' + path_template + 'template_label-centerline.nii.gz' + 
+            ' -dest ' + path_template + 'template_centerline.nii.gz' + 
             ' -ldisc-input ' + fname_image_discs +        
-            ' -ldisc-dest ' + path_template + 'template_labels-disc.nii.gz' + 
+            ' -ldisc-dest ' + path_template + 'template_labels-disc-manual.nii.gz' + 
             ' -ofolder ' + folder_out + 
             ' -o ' + fname_out + 
             ' -disable-straight2curved' + 
@@ -508,7 +508,7 @@ def normalize_intensity_template(dataset_info, verbose = 1):
     This function normalizes the intensity of the image inside the spinal cord
     :return:
     """
-    fname_template_centerline = dataset_info['path_data'] + 'derivatives/template/' + 'template_label-centerline.npz'
+    fname_template_centerline = dataset_info['path_data'] + 'derivatives/template/' + 'template_centerline.npz'
     list_subjects = dataset_info['include_list'].split(' ')
 
     average_intensity = []
